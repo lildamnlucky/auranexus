@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- 🌟 Google Search Optimization Tags -->
+    <title>AuraNexus | The Adaptive AI Workspace</title>
+    <meta name="description" content="Welcome to AuraNexus, an authentic, adaptive AI collaboration terminal. Connect your secure key to access custom layout design tools, audio modules, and creative assistant features.">
+    <meta name="keywords" content="AuraNexus, Aura Nexus AI, Aura chatbot website, AuraNexus terminal">
+    
+    <style>
+        :root {
+            --bg-dark: #131314;
+            --panel-left: #1e1f20;
+            --text-light: #e3e3e3;
+            --text-dim: #9e9e9e;
+            --input-bg: #1e1f20;
+            --hover-color: #2e3032;
+            --accent-purple: #a855f7;
+            --mic-active: #ea4335;
+        }
+
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* 📋 SIDEBAR NAV PANEL */
+        .sidebar {
+            width: 280px;
+            background-color: var(--panel-left);
+            display: flex;
+            flex-direction: column;
+            padding: 16px;
+            box-sizing: border-box;
+            justify-content: space-between;
+        }
+
+        .new-chat-btn {
+            background: #2b2a2a;
+            color: var(--text-light);
+            border: none;
+            padding: 12px 16px;
+            border-radius: 24px;
+            font-weight: 500;
+            font-size: 0.9rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: fit-content;
+            transition: background 0.2s;
+        }
+        .new-chat-btn:hover { background: var(--hover-color); }
+
+        .sidebar-middle {
+            flex: 1;
+            margin-top: 24px;
+            overflow-y: auto;
+        }
+
+        .section-heading {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-light);
+            margin-bottom: 12px;
+            padding-left: 8px;
+        }
+
+        .recent-list {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .recent-item {
+            padding: 10px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: #c4c7c5;
+        }
+        .recent-item:hover { background: var(--hover-color); }
+
+        /* 🔑 SETUP CONFIG DRAWER UI */
+        .config-drawer {
+            background: #131314;
+            border: 1px dashed var(--accent-purple);
+            padding: 12px;
+            border-radius: 14px;
+            margin-bottom: 16px;
+        }
+        .config-drawer label {
+            font-size: 0.75rem;
+            color: var(--accent-purple);
+            display: block;
+            margin-bottom: 6px;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+        }
+        .config-drawer input {
+            width: 100%;
+            background: #2b2a2a;
+            border: 1px solid #444746;
+            padding: 8px;
+            color: #fff;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            box-sizing: border-box;
+            outline: none;
+        }
+        .config-drawer input:focus {
+            border-color: var(--accent-purple);
+        }
+
+        .profile-footer {
+            padding-top: 12px;
+            border-top: 1px solid #444746;
+        }
+
+        .account-gate input {
+            width: 100%;
+            background: #131314;
+            border: 1px solid #444746;
+            padding: 8px;
+            color: white;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            margin-bottom: 6px;
+            box-sizing: border-box;
+        }
+
+        .gate-btn {
+            width: 100%;
+            background: #a87ffb;
+            color: #131314;
+            border: none;
+            padding: 8px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        /* 💬 MAIN WORKSPACE INTERFACE */
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--bg-dark);
+            position: relative;
+        }
+
+        .top-header-bar {
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 1.2rem;
+            color: var(--text-light);
+        }
+
+        .workspace-feed {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px 15%;
+            display: flex;
+            flex-direction: column;
+            gap: 32px;
+        }
+
+        .msg-row { display: flex; width: 100%; gap: 16px; }
+        .msg-row.user-row { justify-content: flex-end; }
+
+        .avatar-label {
+            font-weight: bold;
+            font-size: 0.9rem;
+            color: #a855f7;
+            min-width: 50px;
+        }
+        .user-row .avatar-label { color: #06b6d4; text-align: right; }
+
+        .bubble-text {
+            max-width: 85%;
+            font-size: 1rem;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            color: #e3e3e3;
+        }
+
+        .bubble-text img {
+            max-width: 300px;
+            border-radius: 12px;
+            margin-top: 12px;
+            display: block;
+            border: 1px solid #444746;
+        }
+
+        .audio-card {
+            background: #1e1b4b;
+            border: 1px solid #4c1d95;
+            padding: 16px;
+            border-radius: 12px;
+            margin-top: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-width: 400px;
+        }
+
+        /* 🛠️ CONTROL DOCK BOTTOM PILL */
+        .bottom-dock {
+            padding: 20px 15%;
+            background-color: var(--bg-dark);
+        }
+
+        .input-pill-box {
+            background-color: #1e1f20;
+            border-radius: 28px;
+            padding: 8px 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .input-pill-box input[type="text"] {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--text-light);
+            font-size: 1rem;
+            padding: 12px 0;
+            outline: none;
+        }
+
+        .pill-action-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-light);
+            font-size: 1.3rem;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: background 0.2s;
+        }
+        .pill-action-btn:hover { background: var(--hover-color); }
+        
+        .pill-action-btn.mic-on {
+            background: var(--mic-active);
+            color: white;
+            animation: pulseRecord 1s infinite alternate;
+        }
+
+        .preview-strip {
+            padding: 8px 16px;
+            background: #2b2a2a;
+            border-radius: 12px;
+            margin-bottom: 8px;
+            display: none;
+            width: fit-content;
+        }
+
+        @keyframes pulseRecord {
+            0% { box-shadow: 0 0 2px rgba(234, 67, 53, 0.4); }
+            100% { box-shadow: 0 0 12px rgba(234, 67, 53, 0.8); }
+        }
+
+        #fileUploadSlot { display: none; }
+    </style>
+</head>
+        :root {
+            --bg-dark: #131314;
+            --panel-left: #1e1f20;
+            --text-light: #e3e3e3;
+            --text-dim: #9e9e9e;
+            --input-bg: #1e1f20;
+            --hover-color: #2e3032;
+            --accent-purple: #a855f7;
+            --mic-active: #ea4335;
+        }
+
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* 📋 SIDEBAR NAV PANEL */
+        .sidebar {
+            width: 280px;
+            background-color: var(--panel-left);
+            display: flex;
+            flex-direction: column;
+            padding: 16px;
+            box-sizing: border-box;
+            justify-content: space-between;
+        }
+
+        .new-chat-btn {
+            background: #2b2a2a;
+            color: var(--text-light);
+            border: none;
+            padding: 12px 16px;
+            border-radius: 24px;
+            font-weight: 500;
+            font-size: 0.9rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: fit-content;
+            transition: background 0.2s;
+        }
+        .new-chat-btn:hover { background: var(--hover-color); }
+
+        .sidebar-middle {
+            flex: 1;
+            margin-top: 24px;
+            overflow-y: auto;
+        }
+
+        .section-heading {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-light);
+            margin-bottom: 12px;
+            padding-left: 8px;
+        }
+
+        .recent-list {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .recent-item {
+            padding: 10px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: #c4c7c5;
+        }
+        .recent-item:hover { background: var(--hover-color); }
+
+        .profile-footer {
+            padding-top: 12px;
+            border-top: 1px solid #444746;
+        }
+
+        .account-gate input {
+            width: 100%;
+            background: #131314;
+            border: 1px solid #444746;
+            padding: 8px;
+            color: white;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            margin-bottom: 6px;
+            box-sizing: border-box;
+        }
+
+        .gate-btn {
+            width: 100%;
+            background: #a87ffb;
+            color: #131314;
+            border: none;
+            padding: 8px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        /* 💬 MAIN WORKSPACE INTERFACE */
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--bg-dark);
+            position: relative;
+        }
+
+        .top-header-bar {
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 1.2rem;
+            color: var(--text-light);
+        }
+
+        .workspace-feed {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px 15%;
+            display: flex;
+            flex-direction: column;
+            gap: 32px;
+        }
+
+        .msg-row { display: flex; width: 100%; gap: 16px; }
+        .msg-row.user-row { justify-content: flex-end; }
+
+        .avatar-label {
+            font-weight: bold;
+            font-size: 0.9rem;
+            color: #a855f7;
+            min-width: 50px;
+        }
+        .user-row .avatar-label { color: #06b6d4; text-align: right; }
+
+        .bubble-text {
+            max-width: 85%;
+            font-size: 1rem;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            color: #e3e3e3;
+        }
+
+        .bubble-text img {
+            max-width: 300px;
+            border-radius: 12px;
+            margin-top: 12px;
+            display: block;
+            border: 1px solid #444746;
+        }
+
+        .audio-card {
+            background: #1e1b4b;
+            border: 1px solid #4c1d95;
+            padding: 16px;
+            border-radius: 12px;
+            margin-top: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-width: 400px;
+        }
+
+        /* 🛠️ CONTROL DOCK BOTTOM PILL */
+        .bottom-dock {
+            padding: 20px 15%;
+            background-color: var(--bg-dark);
+        }
+
+        .input-pill-box {
+            background-color: #1e1f20;
+            border-radius: 28px;
+            padding: 8px 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .input-pill-box input[type="text"] {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--text-light);
+            font-size: 1rem;
+            padding: 12px 0;
+            outline: none;
+        }
+
+        .pill-action-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-light);
+            font-size: 1.3rem;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: background 0.2s;
+        }
+        .pill-action-btn:hover { background: var(--hover-color); }
+        
+        .pill-action-btn.mic-on {
+            background: var(--mic-active);
+            color: white;
+            animation: pulseRecord 1s infinite alternate;
+        }
+
+        .preview-strip {
+            padding: 8px 16px;
+            background: #2b2a2a;
+            border-radius: 12px;
+            margin-bottom: 8px;
+            display: none;
+            width: fit-content;
+        }
+
+        @keyframes pulseRecord {
+            0% { box-shadow: 0 0 2px rgba(234, 67, 53, 0.4); }
+            100% { box-shadow: 0 0 12px rgba(234, 67, 53, 0.8); }
+        }
+
+        #fileUploadSlot { display: none; }
+    </style>
+</head>
+<body>
+
+    <!-- 📋 Sidebar Panel Navigation Component -->
+    <div class="sidebar">
+        <div>
+            <button class="new-chat-btn" onclick="resetChatWorkspace()">
+                <span style="font-size:1.2rem;">+</span> New chat
+            </button>
+        </div>
+
+        <div class="sidebar-middle">
+            <div class="section-heading">Recent Conversations</div>
+            <div class="recent-list" id="sidebarRecentBox"></div>
+        </div>
+
+        <div class="profile-footer">
+            <div style="font-size:0.85rem; margin-bottom:10px; color:#c4c7c5;">
+                Active Account: <strong id="userProfileTag">Guest User</strong>
+            </div>
+            <div class="account-gate" id="gateUI">
+                <input type="text" id="gmailField" placeholder="Enter Gmail username...">
+                <input type="password" id="passField" placeholder="Enter Password...">
+                <button class="gate-btn" onclick="runAccountVerification()">Sign In</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 💬 Main Interaction Core Feed Workspace -->
+    <div class="chat-container">
+        <div class="top-header-bar">
+            <div>AURA <span style="color:var(--text-dim); font-size:0.9rem;">Flash 2.5</span></div>
+            <div style="font-size:0.9rem; color:#a855f7;">● SYSTEM ONLINE</div>
+        </div>
+
+        <div class="workspace-feed" id="chatFeedLog">
+            <div class="msg-row">
+                <div class="avatar-label">AURA</div>
+                <div class="bubble-text" id="welcomeText">Welcome to AURA Core. Log into your account or start typing below to build your game projects or listen to generated sound blueprints!</div>
+            </div>
+        </div>
+
+        <!-- Dock Pill Input Panel Controls -->
+        <div class="bottom-dock">
+            <div class="preview-strip" id="attachmentStrip"></div>
+            
+            <div class="input-pill-box">
+                <input type="file" id="fileUploadSlot" accept="image/*" onchange="processImageAttachment(event)">
+                
+                <button class="pill-action-btn" onclick="clickHiddenUpload()" title="Upload Image">+</button>
+                <button class="pill-action-btn" id="voiceBtn" onclick="handleVoiceInputToggle()" title="Use Voice Input">🎙️</button>
+                
+                <input type="text" id="mainQueryBox" placeholder="Ask AURA..." onkeypress="handleEnterKey(event)">
+                <button class="pill-action-btn" onclick="fireQueryRequest()" style="color:#a855f7;" title="Send">➔</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let conversationHistory = [];
+        let archivedSessions = {};
+        let activeImageBase64 = "";
+        let activeImageMime = "";
+        let speechEngine = null;
+        let isRecording = false;
+        let userIdentityName = "Guest User";
+
+        function getSystemInstructions() {
+            return `You are AURA AI, an authentic, adaptive AI collaborator with a touch of wit. You balance empathy with candor. You are talking to your friend whose account profile name is: ${userIdentityName}. Adapt your answers based entirely on their name. If they are signed in as Kwaku Marfo, remember these special facts: 1) His father is Paul Sefabadu. 2) His sister is Ohemma Sefabadu (20 years old). 3) Foltyn is a YouTuber who plays ROBLOX, not Minecraft. 4) He lives in Ghana. If the name is someone else, greet them by their specific profile name.`;
+        }
+
+        function runAccountVerification() {
+            let userEmail = document.getElementById("gmailField").value.trim();
+            let userPass = document.getElementById("passField").value.trim();
+
+            if(!userEmail || !userPass) {
+                alert("Please fill out both validation boxes.");
+                return;
+            }
+
+            let namePrefix = userEmail.split('@')[0];
+            userIdentityName = namePrefix.charAt(0).toUpperCase() + namePrefix.slice(1);
+
+            if (userIdentityName.toLowerCase().includes("kwaku")) {
+                userIdentityName = "Kwaku Marfo";
+            }
+
+            document.getElementById("userProfileTag").innerText = userIdentityName + " ✓";
+            document.getElementById("gateUI").innerHTML = `<div style="color:#34d399; font-size:0.8rem; font-weight:500;">● Signed In via Google Secure Auth</div>`;
+            document.getElementById("welcomeText").innerText = `Systems online, hello ${userIdentityName}. Let's keep working on your projects or test out image inputs!`;
+        }
+
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const EngineClass = window.SpeechRecognition || window.webkitSpeechRecognition;
+            speechEngine = new EngineClass();
+            speechEngine.continuous = false;
+            speechEngine.interimResults = false;
+
+            speechEngine.onresult = function(e) {
+                document.getElementById("mainQueryBox").value = e.results[0][0].transcript;
+                turnOffMicUI();
+                fireQueryRequest();
+            };
+            speechEngine.onerror = function() { turnOffMicUI(); };
+            speechEngine.onend = function() { turnOffMicUI(); };
+        }
+
+        function handleVoiceInputToggle() {
+            if(!speechEngine) { alert("Voice capture unsupported inside this browser window framework viewport."); return; }
+            let micBtn = document.getElementById("voiceBtn");
+            if(!isRecording) {
+                isRecording = true;
+                micBtn.classList.add("mic-on");
+                document.getElementById("mainQueryBox").placeholder = "Listening live... Speak clearly!";
+                speechEngine.start();
+            } else { speechEngine.stop(); }
+        }
+
+        function turnOffMicUI() {
+            isRecording = false;
+            document.getElementById("voiceBtn").classList.remove("mic-on");
+            document.getElementById("mainQueryBox").placeholder = "Ask AURA...";
+        }
+
+        function handleEnterKey(e) { if(e.key === 'Enter') fireQueryRequest(); }
+        function clickHiddenUpload() { document.getElementById("fileUploadSlot").click(); }
+
+        function processImageAttachment(e) {
+            let file = e.target.files[0];
+            if(!file) return;
+
+            activeImageMime = file.type;
+            let reader = new FileReader();
+            reader.onload = function(evt) {
+                activeImageBase64 = evt.target.result.split(',')[1];
+                let strip = document.getElementById("attachmentStrip");
+                strip.innerHTML = `🖼️ Attached Image Asset Locked`;
+                strip.style.display = "block";
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function resetChatWorkspace() {
+            conversationHistory = [];
+            document.getElementById("chatFeedLog").innerHTML = `<div class="msg-row"><div class="avatar-label">AURA</div><div class="bubble-text">New chat window initialized. How can I help you right now?</div></div>`;
+        }
+
+        function reloadArchivedSession(key) {
+            if(!archivedSessions[key]) return;
+            conversationHistory = JSON.parse(JSON.stringify(archivedSessions[key]));
+            let feed = document.getElementById("chatFeedLog");
+            feed.innerHTML = "";
+            
+            conversationHistory.forEach(msg => {
+                let row = document.createElement("div");
+                row.className = "msg-row " + (msg.role === "user" ? "user-row" : "");
+                let label = msg.role === "user" ? "You" : "AURA";
+                
+                let textContent = "";
+                msg.parts.forEach(p => {
+                    if (p.text) textContent += p.text;
+                });
+
+                row.innerHTML = `<div class="avatar-label">${label}</div><div class="bubble-text">${textContent}</div>`;
+                feed.appendChild(row);
+            });
+            feed.scrollTop = feed.scrollHeight;
+        }
+
+        async function fireQueryRequest() {
+            let inputBox = document.getElementById("mainQueryBox");
+            let promptText = inputBox.value.trim();
+            if(promptText === "" && activeImageBase64 === "") return;
+
+            let feed = document.getElementById("chatFeedLog");
+            let strip = document.getElementById("attachmentStrip");
+
+            let userRow = document.createElement("div");
+            userRow.className = "msg-row user-row";
+            let chatBubbleContent = `<div class="bubble-text">${promptText}`;
+            if(activeImageBase64 !== "") {
+                chatBubbleContent += `<br><img src="data:${activeImageMime};base64,${activeImageBase64}">`;
+            }
+            chatBubbleContent += `</div>`;
+            userRow.innerHTML = `${chatBubbleContent}<div class="avatar-label">You</div>`;
+            feed.appendChild(userRow);
+
+            let trackTitle = promptText || "Visual Image Matrix Request";
+            if(!archivedSessions[trackTitle]) {
+                let listContainer = document.getElementById("sidebarRecentBox");
+                let recentTab = document.createElement("div");
+                recentTab.className = "recent-item";
+                recentTab.innerText = trackTitle.substring(0, 24) + "...";
+                recentTab.onclick = () => reloadArchivedSession(trackTitle);
+                listContainer.insertBefore(recentTab, listContainer.firstChild);
+            }
+
+            let structuredPayloadParts = [];
+            if (promptText !== "") {
+                structuredPayloadParts.push({ text: promptText });
+            }
+
+            if(activeImageBase64 !== "") {
+                structuredPayloadParts.push({
+                    inlineData: {
+                        mimeType: activeImageMime,
+                        data: activeImageBase64
+                    }
+                });
+            }
+
+            conversationHistory.push({ role: "user", parts: structuredPayloadParts });
+            archivedSessions[trackTitle] = JSON.parse(JSON.stringify(conversationHistory));
+
+            inputBox.value = "";
+            strip.style.display = "none";
+            
+            let imageToSendBase64 = activeImageBase64;
+            let imageToSendMime = activeImageMime;
+            activeImageBase64 = ""; 
+            activeImageMime = "";
+            feed.scrollTop = feed.scrollHeight;
+
+            let aiRow = document.createElement("div");
+            aiRow.className = "msg-row";
+            let aiBubble = document.createElement("div");
+            aiBubble.className = "bubble-text";
+            aiBubble.innerText = "AURA is compiling data nodes...";
+            aiRow.appendChild(aiBubble);
+            aiRow.insertBefore(document.createElement("div"), aiBubble).className = "avatar-label";
+            aiRow.querySelector(".avatar-label").innerText = "AURA";
+            feed.appendChild(aiRow);
+            feed.scrollTop = feed.scrollHeight;
+
+            let triggerMusicPlayer = promptText.toLowerCase().includes("music") || promptText.toLowerCase().includes("song") || promptText.toLowerCase().includes("sound track");
+
+            // ==============================================================
+            // 🔑 BRAND NEW UPDATED CHANNELS ACTIVE BELOW
+            // ==============================================================
+            const API_KEY = "AQ.Ab8RN6IB-kpLQgBVGtwwCCHpBWmFgiJ7-E5zlZDNjAuhIIB1Zg"; 
+            
+            const ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + API_KEY;
+
+            try {
+                let cleanContents = conversationHistory.map(msg => {
+                    return {
+                        role: msg.role,
+                        parts: msg.parts.map(p => {
+                            if (p.inlineData) {
+                                return { inlineData: { mimeType: p.inlineData.mimeType, data: p.inlineData.data } };
+                            }
+                            return { text: p.text || "" };
+                        }).filter(p => p.text !== "" || p.inlineData)
+                    };
+                });
+
+                let webConnection = await fetch(ENDPOINT, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        systemInstruction: { parts: [{ text: getSystemInstructions() }] },
+                        contents: cleanContents
+                    })
+                });
+
+                let parsedJSON = await webConnection.json();
+                
+                if (parsedJSON.error) {
+                    throw new Error(parsedJSON.error.message);
+                }
+
+                let aiFinalResponse = parsedJSON.candidates[0].content.parts[0].text;
+                aiBubble.innerText = aiFinalResponse;
+
+                if(triggerMusicPlayer) {
+                    let audioComponent = document.createElement("div");
+                    audioComponent.className = "audio-card";
+                    audioComponent.innerHTML = `
+                        <span style="font-size:0.85rem; font-weight:bold; color:#ec4899;">🎵 LIVE AUDIO SOUNDTRACK CODES ONLINE</span>
+                        <audio controls autoplay loop style="width:100%; margin-top:5px;">
+                            <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mp3">
+                        </audio>
+                    `;
+                    aiBubble.appendChild(audioComponent);
+                }
+
+                conversationHistory.push({ role: "model", parts: [{ text: aiFinalResponse }] });
+                archivedSessions[trackTitle] = JSON.parse(JSON.stringify(conversationHistory));
+
+            } catch (error) {
+                aiBubble.style.color = "#ea4335";
+                aiBubble.innerText = "❌ Connection Failed: " + error.message;
+                console.error("Gemini API Error Detail:", error);
+            }
+
+            feed.scrollTop = feed.scrollHeight;
+        }
+    </script>
+</body>
+</html>
