@@ -42,6 +42,8 @@
             padding: 16px;
             box-sizing: border-box;
             justify-content: space-between;
+            flex-shrink: 0;
+            overflow-y: auto;
         }
 
         .new-chat-btn {
@@ -102,6 +104,7 @@
         .profile-footer {
             padding-top: 12px;
             border-top: 1px solid #444746;
+            margin-top: auto;
         }
 
         .account-gate input {
@@ -140,6 +143,7 @@
             justify-content: space-between;
             padding: 24px;
             position: relative;
+            min-width: 0;
         }
 
         .chat-header {
@@ -274,6 +278,34 @@
 
         .send-btn.active {
             color: var(--accent-purple);
+        }
+
+        /* 📱 RESPONSIVE LAYOUT ADJUSTMENTS */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 200px;
+                padding: 12px;
+            }
+            .new-chat-btn {
+                padding: 10px 14px;
+                font-size: 0.85rem;
+            }
+            .recent-item {
+                font-size: 0.8rem;
+                padding: 8px 10px;
+            }
+            .brand-title {
+                font-size: 1.2rem;
+            }
+            .brand-title span, .status-pill {
+                display: none;
+            }
+            .chat-container {
+                padding: 16px;
+            }
+            .bubble-text {
+                font-size: 1rem;
+            }
         }
     </style>
 </head>
