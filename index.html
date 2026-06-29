@@ -3,29 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AuraNexus | The Adaptive Workspace</title>
-    
-    <!-- AuraNexus Indexing and Search Tags -->
-    <meta name="auranexus-system" content="active">
-    <meta name="auranexus-core" content="enabled">
-    <meta name="auranexus-workspace" content="terminal-layout">
-
+    <title>AuraNexus</title>
     <style>
         :root {
-            --bg-dark: #131314;
-            --panel-left: #1e1f20;
-            --text-light: #e3e3e3;
+            --bg-main: #131314;
+            --bg-sidebar: #1e1f20;
+            --text-primary: #e3e3e3;
+            --text-secondary: #c4c7c5;
             --text-dim: #9e9e9e;
             --input-bg: #1e1f20;
-            --hover-color: #2e3032;
-            --accent-purple: #a855f7;
+            --input-focus: #28292a;
+            --border-color: #444746;
+            --accent-color: #a855f7;
             --mic-active: #ea4335;
         }
 
         body {
-            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
-            background-color: var(--bg-dark);
-            color: var(--text-light);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-primary);
             margin: 0;
             padding: 0;
             display: flex;
@@ -36,19 +32,18 @@
         /* 📋 SIDEBAR NAV PANEL */
         .sidebar {
             width: 280px;
-            background-color: var(--panel-left);
+            background-color: var(--bg-sidebar);
             display: flex;
             flex-direction: column;
             padding: 16px;
             box-sizing: border-box;
             justify-content: space-between;
             flex-shrink: 0;
-            overflow-y: auto;
         }
 
         .new-chat-btn {
             background: #2b2a2a;
-            color: var(--text-light);
+            color: var(--text-primary);
             border: none;
             padding: 12px 16px;
             border-radius: 24px;
@@ -63,7 +58,7 @@
         }
 
         .new-chat-btn:hover {
-            background: var(--hover-color);
+            background: #333537;
         }
 
         .sidebar-middle {
@@ -94,24 +89,23 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            color: #c4c7c5;
+            color: var(--text-secondary);
         }
 
         .recent-item:hover {
-            background: var(--hover-color);
+            background: #333537;
         }
 
         .profile-footer {
             padding-top: 12px;
-            border-top: 1px solid #444746;
-            margin-top: auto;
+            border-top: 1px solid var(--border-color);
         }
 
         .account-gate input {
             width: 100%;
-            background: #131314;
-            border: 1px solid #444746;
-            color: var(--text-light);
+            background: var(--bg-main);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
             padding: 8px 12px;
             border-radius: 6px;
             margin-bottom: 8px;
@@ -120,12 +114,12 @@
         }
 
         .account-gate input:focus {
-            outline: 1px solid var(--accent-purple);
+            outline: 1px solid var(--accent-color);
         }
 
         .account-gate button {
             width: 100%;
-            background: var(--accent-purple);
+            background: var(--accent-color);
             color: white;
             border: none;
             padding: 8px;
@@ -193,14 +187,14 @@
         .avatar {
             font-weight: bold;
             font-size: 0.9rem;
-            color: #c084fc;
+            color: var(--accent-color);
             min-width: 50px;
         }
 
         .bubble-text {
             line-height: 1.6;
             font-size: 1.05rem;
-            color: var(--text-light);
+            color: var(--text-primary);
         }
 
         /* ⌨️ INTERACTION BAR */
@@ -210,7 +204,7 @@
             margin: 0 auto;
             background-color: var(--input-bg);
             border-radius: 28px;
-            padding: 8px 16px;
+            padding: 8px 20px;
             display: flex;
             align-items: center;
             box-sizing: border-box;
@@ -218,50 +212,51 @@
         }
 
         .input-wrapper:focus-within {
-            background-color: #28292a;
-            border-color: #444746;
+            background-color: var(--input-focus);
+            border-color: var(--border-color);
         }
 
         .add-media-btn {
             background: none;
             border: none;
-            color: var(--text-light);
-            font-size: 1.3rem;
+            color: var(--text-primary);
+            font-size: 1.4rem;
             cursor: pointer;
-            padding: 0 8px;
+            padding-right: 12px;
         }
 
         .main-text-input {
             flex: 1;
             background: none;
             border: none;
-            color: var(--text-light);
-            padding: 12px;
+            color: var(--text-primary);
+            padding: 12px 0;
             font-size: 1rem;
             outline: none;
         }
 
-        .voice-submit-cluster {
+        .interaction-cluster {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 16px;
         }
 
         .mic-btn {
             background: none;
             border: none;
-            color: var(--text-light);
+            color: var(--text-primary);
             font-size: 1.2rem;
             cursor: pointer;
-            padding: 6px;
-            border-radius: 50%;
+            padding: 4px;
             display: flex;
             align-items: center;
             justify-content: center;
+            transition: color 0.2s;
         }
 
-        .mic-btn:hover {
-            background: var(--hover-color);
+        .mic-btn.listening {
+            color: var(--mic-active);
+            animation: pulse 1.5s infinite;
         }
 
         .send-btn {
@@ -270,17 +265,23 @@
             color: var(--text-dim);
             font-size: 1.2rem;
             cursor: pointer;
-            padding: 6px;
+            padding: 4px;
             display: flex;
             align-items: center;
             justify-content: center;
         }
 
         .send-btn.active {
-            color: var(--accent-purple);
+            color: var(--accent-color);
         }
 
-        /* 📱 RESPONSIVE LAYOUT ADJUSTMENTS */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+            100% { transform: scale(1); }
+        }
+
+        /* 📱 TABLET & MOBILE RESPONSIVENESS */
         @media (max-width: 768px) {
             .sidebar {
                 width: 200px;
@@ -331,7 +332,7 @@
         <div class="profile-footer">
             <div class="account-gate">
                 <div class="section-heading" style="padding-left:0;">Active Account:</div>
-                <p id="user-display" style="margin:0 0 12px 0; font-size:0.9rem; font-weight:600; color:#c084fc;">Guest User</p>
+                <p id="user-display" style="margin:0 0 12px 0; font-size:0.9rem; font-weight:600; color:var(--accent-color);">Guest User</p>
                 <input type="text" id="api-key-input" placeholder="Enter Gemini API Key...">
                 <button onclick="saveApiKey()">Save Token</button>
             </div>
@@ -341,7 +342,7 @@
     <!-- 🤖 CHAT CONSOLE AREA -->
     <div class="chat-container">
         <div class="chat-header">
-            <div class="brand-title">AURA <span>Flash 2.5</span></div>
+            <div class="brand-title">AuraNexus <span>Flash 2.5</span></div>
             <div class="status-pill">● SYSTEM ONLINE</div>
         </div>
 
@@ -349,7 +350,7 @@
             <div class="msg-row">
                 <div class="avatar">AURA</div>
                 <div class="bubble-text">
-                    Welcome to AURA Core. Enter your Gemini API Key in the left panel to link your live engine and start launching queries!
+                    Welcome to AuraNexus Core. Enter your Gemini API Key in the left panel to link your live engine and start launching queries!
                 </div>
             </div>
         </div>
@@ -357,9 +358,9 @@
         <!-- ⌨️ INTERACTION BAR -->
         <div class="input-wrapper">
             <button class="add-media-btn">＋</button>
-            <input type="text" class="main-text-input" id="user-input" placeholder="Ask AURA..." oninput="toggleSendBtn()">
-            <div class="voice-submit-cluster">
-                <button class="mic-btn">🎙️</button>
+            <input type="text" class="main-text-input" id="user-input" placeholder="Ask AuraNexus..." oninput="toggleSendBtn()">
+            <div class="interaction-cluster">
+                <button class="mic-btn" id="mic-button" onclick="toggleVoiceRecognition()">🎙️</button>
                 <button class="send-btn" id="send-button" onclick="sendMessage()">➔</button>
             </div>
         </div>
@@ -367,6 +368,8 @@
 
     <script>
         let GEMINI_API_KEY = localStorage.getItem("gemini_api_key") || "";
+        let recognition;
+        let isListening = false;
 
         if (GEMINI_API_KEY) {
             document.getElementById("user-display").innerText = "Engine Connected";
@@ -391,6 +394,57 @@
             } else {
                 btn.classList.remove("active");
             }
+        }
+
+        /* 🎙️ LIVE VOICE DICTATION CONFIG */
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.lang = 'en-US';
+
+            recognition.onresult = function(event) {
+                const speechToText = event.results[0][0].transcript;
+                const inputField = document.getElementById("user-input");
+                inputField.value = speechToText;
+                toggleSendBtn();
+                stopListeningMode();
+            };
+
+            recognition.onerror = function() {
+                stopListeningMode();
+            };
+
+            recognition.onend = function() {
+                stopListeningMode();
+            };
+        }
+
+        function toggleVoiceRecognition() {
+            if (!recognition) {
+                alert("Voice recognition is not fully supported on this browser version.");
+                return;
+            }
+            if (isListening) {
+                recognition.stop();
+                stopListeningMode();
+            } else {
+                try {
+                    recognition.start();
+                    isListening = true;
+                    document.getElementById("mic-button").classList.add("listening");
+                    document.getElementById("user-input").placeholder = "Listening directly to your voice...";
+                } catch (e) {
+                    console.error(e);
+                }
+            }
+        }
+
+        function stopListeningMode() {
+            isListening = false;
+            document.getElementById("mic-button").classList.remove("listening");
+            document.getElementById("user-input").placeholder = "Ask AuraNexus...";
         }
 
         async function sendMessage() {
