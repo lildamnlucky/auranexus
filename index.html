@@ -19,7 +19,7 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             background-color: var(--bg-main);
             color: var(--text-primary);
             margin: 0;
@@ -90,15 +90,19 @@
             overflow: hidden;
             text-overflow: ellipsis;
             color: var(--text-secondary);
+            transition: background 0.2s;
         }
 
-        .recent-item:hover {
+        .recent-item:hover, .recent-item.active-chat {
             background: #333537;
         }
 
         .profile-footer {
             padding-top: 12px;
             border-top: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
         }
 
         .account-gate input {
@@ -108,13 +112,9 @@
             color: var(--text-primary);
             padding: 8px 12px;
             border-radius: 6px;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
             box-sizing: border-box;
             font-size: 0.85rem;
-        }
-
-        .account-gate input:focus {
-            outline: 1px solid var(--accent-color);
         }
 
         .account-gate button {
@@ -127,6 +127,7 @@
             font-weight: 600;
             cursor: pointer;
             font-size: 0.85rem;
+            margin-bottom: 4px;
         }
 
         /* 🤖 CHAT CONSOLE AREA */
@@ -151,12 +152,6 @@
             font-weight: 500;
         }
 
-        .brand-title span {
-            font-size: 0.9rem;
-            color: var(--text-dim);
-            margin-left: 8px;
-        }
-
         .status-pill {
             font-size: 0.75rem;
             font-weight: bold;
@@ -164,19 +159,17 @@
             background: rgba(16, 185, 129, 0.1);
             padding: 4px 10px;
             border-radius: 12px;
-            letter-spacing: 0.5px;
         }
 
         .chat-window {
             flex: 1;
-            margin: 40px auto;
+            margin: 20px auto;
             width: 100%;
             max-width: 720px;
             display: flex;
             flex-direction: column;
             gap: 24px;
             overflow-y: auto;
-            padding-right: 8px;
         }
 
         .msg-row {
@@ -208,12 +201,6 @@
             display: flex;
             align-items: center;
             box-sizing: border-box;
-            border: 1px solid transparent;
-        }
-
-        .input-wrapper:focus-within {
-            background-color: var(--input-focus);
-            border-color: var(--border-color);
         }
 
         .add-media-btn {
@@ -247,16 +234,10 @@
             color: var(--text-primary);
             font-size: 1.2rem;
             cursor: pointer;
-            padding: 4px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: color 0.2s;
         }
 
         .mic-btn.listening {
             color: var(--mic-active);
-            animation: pulse 1.5s infinite;
         }
 
         .send-btn {
@@ -265,99 +246,62 @@
             color: var(--text-dim);
             font-size: 1.2rem;
             cursor: pointer;
-            padding: 4px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
         }
 
         .send-btn.active {
             color: var(--accent-color);
         }
 
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.15); }
-            100% { transform: scale(1); }
-        }
+        #file-input { display: none; }
 
-        /* 📱 TABLET & MOBILE RESPONSIVENESS */
         @media (max-width: 768px) {
-            .sidebar {
-                width: 200px;
-                padding: 12px;
-            }
-            .new-chat-btn {
-                padding: 10px 14px;
-                font-size: 0.85rem;
-            }
-            .recent-item {
-                font-size: 0.8rem;
-                padding: 8px 10px;
-            }
-            .brand-title {
-                font-size: 1.2rem;
-            }
-            .brand-title span, .status-pill {
-                display: none;
-            }
-            .chat-container {
-                padding: 16px;
-            }
-            .bubble-text {
-                font-size: 1rem;
-            }
+            .sidebar { width: 200px; padding: 12px; }
+            .brand-title span, .status-pill { display: none; }
         }
     </style>
 </head>
 <body>
 
-    <!-- 📋 SIDEBAR NAV PANEL -->
     <div class="sidebar">
         <div>
-            <button class="new-chat-btn">
+            <button class="new-chat-btn" onclick="createNewChat()">
                 <span>＋</span> New chat
             </button>
         </div>
 
         <div class="sidebar-middle">
             <div class="section-heading">Recent Conversations</div>
-            <div class="recent-list">
-                <div class="recent-item">Website for Talent Show</div>
-                <div class="recent-item">Game UI Design Concept</div>
-                <div class="recent-item">Terminal Config Setup</div>
+            <div class="recent-list" id="recent-list-container">
+                <!-- Dynamically populated via javascript -->
             </div>
         </div>
 
         <div class="profile-footer">
             <div class="account-gate">
-                <div class="section-heading" style="padding-left:0;">Active Account:</div>
-                <p id="user-display" style="margin:0 0 12px 0; font-size:0.9rem; font-weight:600; color:var(--accent-color);">Guest User</p>
-                <input type="text" id="api-key-input" placeholder="Enter Gemini API Key...">
-                <button onclick="saveApiKey()">Save Token</button>
+                <div class="section-heading" style="padding-left:0;">User Engine Config:</div>
+                <input type="text" id="username-input" placeholder="Profile Username...">
+                <input type="password" id="api-key-input" placeholder="Gemini API Key...">
+                <button onclick="loginProfile()">Connect Account</button>
             </div>
         </div>
     </div>
 
-    <!-- 🤖 CHAT CONSOLE AREA -->
     <div class="chat-container">
         <div class="chat-header">
-            <div class="brand-title">AuraNexus <span>Flash 2.5</span></div>
+            <div class="brand-title" id="display-title">AuraNexus</div>
             <div class="status-pill">● SYSTEM ONLINE</div>
         </div>
 
         <div class="chat-window" id="chat-window">
             <div class="msg-row">
                 <div class="avatar">AURA</div>
-                <div class="bubble-text">
-                    Welcome to AuraNexus Core. Enter your Gemini API Key in the left panel to link your live engine and start launching queries!
-                </div>
+                <div class="bubble-text">Setup complete. Connect a profile username and API key on the left panel to load saved workspaces.</div>
             </div>
         </div>
 
-        <!-- ⌨️ INTERACTION BAR -->
         <div class="input-wrapper">
-            <button class="add-media-btn">＋</button>
+            <button class="add-media-btn" onclick="triggerFileSelect()">＋</button>
+            <input type="file" id="file-input" onchange="handleFileAttachment()">
             <input type="text" class="main-text-input" id="user-input" placeholder="Ask AuraNexus..." oninput="toggleSendBtn()">
             <div class="interaction-cluster">
                 <button class="mic-btn" id="mic-button" onclick="toggleVoiceRecognition()">🎙️</button>
@@ -367,36 +311,152 @@
     </div>
 
     <script>
-        let GEMINI_API_KEY = localStorage.getItem("gemini_api_key") || "";
+        let currentUsername = "GuestUser";
+        let GEMINI_API_KEY = "";
+        let chatSessions = {}; 
+        let activeSessionId = null;
         let recognition;
         let isListening = false;
 
-        if (GEMINI_API_KEY) {
-            document.getElementById("user-display").innerText = "Engine Connected";
-            document.getElementById("api-key-input").value = "••••••••••••••••";
+        window.onload = function() {
+            loadGlobalData();
+            renderRecentChats();
+            startDefaultSession();
+        };
+
+        function loadGlobalData() {
+            const savedUser = localStorage.getItem("current_username");
+            if (savedUser) {
+                currentUsername = savedUser;
+                document.getElementById("username-input").value = currentUsername;
+                document.getElementById("display-title").innerText = `AuraNexus (${currentUsername})`;
+            }
+            GEMINI_API_KEY = localStorage.getItem(`key_${currentUsername}`) || "";
+            if (GEMINI_API_KEY) {
+                document.getElementById("api-key-input").value = GEMINI_API_KEY;
+            }
+            const savedSessions = localStorage.getItem(`sessions_${currentUsername}`);
+            chatSessions = savedSessions ? JSON.parse(savedSessions) : {};
         }
 
-        function saveApiKey() {
-            const key = document.getElementById("api-key-input").value.trim();
-            if (key) {
-                localStorage.setItem("gemini_api_key", key);
-                GEMINI_API_KEY = key;
-                document.getElementById("user-display").innerText = "Engine Connected";
-                alert("API Key saved securely to your browser!");
+        function loginProfile() {
+            const userIn = document.getElementById("username-input").value.trim();
+            const keyIn = document.getElementById("api-key-input").value.trim();
+
+            if (!userIn) {
+                alert("Please declare a username profile.");
+                return;
             }
+
+            currentUsername = userIn;
+            GEMINI_API_KEY = keyIn;
+
+            localStorage.setItem("current_username", currentUsername);
+            localStorage.setItem(`key_${currentUsername}`, GEMINI_API_KEY);
+
+            document.getElementById("display-title").innerText = `AuraNexus (${currentUsername})`;
+
+            const savedSessions = localStorage.getItem(`sessions_${currentUsername}`);
+            chatSessions = savedSessions ? JSON.parse(savedSessions) : {};
+
+            renderRecentChats();
+            const keys = Object.keys(chatSessions);
+            if (keys.length > 0) {
+                loadChatSession(keys[0]);
+            } else {
+                createNewChat();
+            }
+            alert(`Switched engine to user profile: ${currentUsername}`);
+        }
+
+        function renderRecentChats() {
+            const container = document.getElementById("recent-list-container");
+            container.innerHTML = "";
+            
+            Object.keys(chatSessions).forEach(id => {
+                const item = document.createElement("div");
+                item.className = "recent-item";
+                if (id === activeSessionId) item.classList.add("active-chat");
+                item.innerText = chatSessions[id].title || "Untitled Conversation";
+                item.onclick = () => loadChatSession(id);
+                container.appendChild(item);
+            });
+        }
+
+        function startDefaultSession() {
+            const keys = Object.keys(chatSessions);
+            if (keys.length > 0) {
+                loadChatSession(keys[0]);
+            } else {
+                createNewChat();
+            }
+        }
+
+        function createNewChat() {
+            activeSessionId = "session_" + Date.now();
+            chatSessions[activeSessionId] = {
+                title: "New Workspace Chat",
+                history: []
+            };
+            saveSessionsToStorage();
+            renderRecentChats();
+            clearChatWindow();
+        }
+
+        function clearChatWindow() {
+            const win = document.getElementById("chat-window");
+            win.innerHTML = `<div class="msg-row"><div class="avatar">AURA</div><div class="bubble-text">New sandbox console initialized. Ready to generate responses.</div></div>`;
+        }
+
+        function loadChatSession(id) {
+            if (!chatSessions[id]) return;
+            activeSessionId = id;
+            renderRecentChats();
+            
+            const win = document.getElementById("chat-window");
+            win.innerHTML = "";
+
+            if (chatSessions[id].history.length === 0) {
+                clearChatWindow();
+                return;
+            }
+
+            chatSessions[id].history.forEach(msg => {
+                const row = document.createElement("div");
+                row.className = "msg-row";
+                if(msg.role === "user") {
+                    row.innerHTML = `<div class="avatar" style="color:#e3e3e3;">YOU</div><div class="bubble-text">${msg.text}</div>`;
+                } else {
+                    row.innerHTML = `<div class="avatar">AURA</div><div class="bubble-text">${msg.text}</div>`;
+                }
+                win.appendChild(row);
+            });
+            win.scrollTop = win.scrollHeight;
+        }
+
+        function saveSessionsToStorage() {
+            localStorage.setItem(`sessions_${currentUsername}`, JSON.stringify(chatSessions));
         }
 
         function toggleSendBtn() {
             const input = document.getElementById("user-input").value.trim();
             const btn = document.getElementById("send-button");
-            if (input.length > 0) {
-                btn.classList.add("active");
-            } else {
-                btn.classList.remove("active");
+            if (input.length > 0) btn.classList.add("active");
+            else btn.classList.remove("active");
+        }
+
+        function triggerFileSelect() {
+            document.getElementById("file-input").click();
+        }
+
+        function handleFileAttachment() {
+            const fileBox = document.getElementById("file-input");
+            if (fileBox.files.length > 0) {
+                alert(`File selected: ${fileBox.files[0].name}. (Upgraded engine attachment ready)`);
             }
         }
 
-        /* 🎙️ LIVE VOICE DICTATION CONFIG */
+        /* 🎙️ MOBILE & DESKTOP MIC SUPPORT */
         if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             recognition = new SpeechRecognition();
@@ -405,39 +465,33 @@
             recognition.lang = 'en-US';
 
             recognition.onresult = function(event) {
-                const speechToText = event.results[0][0].transcript;
-                const inputField = document.getElementById("user-input");
-                inputField.value = speechToText;
+                const text = event.results[0][0].transcript;
+                document.getElementById("user-input").value = text;
                 toggleSendBtn();
                 stopListeningMode();
             };
-
-            recognition.onerror = function() {
-                stopListeningMode();
-            };
-
-            recognition.onend = function() {
-                stopListeningMode();
-            };
+            recognition.onerror = () => stopListeningMode();
+            recognition.onend = () => stopListeningMode();
         }
 
         function toggleVoiceRecognition() {
             if (!recognition) {
-                alert("Voice recognition is not fully supported on this browser version.");
+                alert("Voice configuration is not supported on this device browser architecture.");
                 return;
             }
             if (isListening) {
                 recognition.stop();
                 stopListeningMode();
             } else {
-                try {
+                // Request permissions directly
+                navigator.mediaDevices.getUserMedia({ audio: true })
+                .then(() => {
                     recognition.start();
                     isListening = true;
                     document.getElementById("mic-button").classList.add("listening");
-                    document.getElementById("user-input").placeholder = "Listening directly to your voice...";
-                } catch (e) {
-                    console.error(e);
-                }
+                    document.getElementById("user-input").placeholder = "Listening directly...";
+                })
+                .catch(err => alert("Microphone access was denied by your Android device systems. Check permissions."));
             }
         }
 
@@ -453,45 +507,56 @@
             if (!text) return;
 
             if (!GEMINI_API_KEY) {
-                alert("Please save your Gemini API key in the sidebar first!");
+                alert("Please add your Gemini API Key first!");
                 return;
             }
 
-            const chatWindow = document.getElementById("chat-window");
+            const win = document.getElementById("chat-window");
 
-            // Append User Message
+            // Display user message
             const userRow = document.createElement("div");
             userRow.className = "msg-row";
             userRow.innerHTML = `<div class="avatar" style="color:#e3e3e3;">YOU</div><div class="bubble-text">${text}</div>`;
-            chatWindow.appendChild(userRow);
+            win.appendChild(userRow);
+
+            // Save conversation state 
+            chatSessions[activeSessionId].history.push({ role: "user", text: text });
+            if (chatSessions[activeSessionId].title === "New Workspace Chat") {
+                chatSessions[activeSessionId].title = text.substring(0, 22) + "...";
+            }
 
             inputField.value = "";
             toggleSendBtn();
-            chatWindow.scrollTop = chatWindow.scrollHeight;
+            win.scrollTop = win.scrollHeight;
 
-            // Append Loading AI Placeholder
             const aiRow = document.createElement("div");
             aiRow.className = "msg-row";
-            aiRow.innerHTML = `<div class="avatar">AURA</div><div class="bubble-text" id="loading-ai">Thinking...</div>`;
-            chatWindow.appendChild(aiRow);
-            chatWindow.scrollTop = chatWindow.scrollHeight;
+            aiRow.innerHTML = `<div class="avatar">AURA</div><div class="bubble-text" id="loader">Processing request...</div>`;
+            win.appendChild(aiRow);
+            win.scrollTop = win.scrollHeight;
 
             try {
-                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ contents: [{ parts: [{ text: text }] }] })
                 });
 
-                const data = await response.json();
-                const reply = data.candidates[0].content.parts[0].text;
-                document.getElementById("loading-ai").innerText = reply;
-                document.getElementById("loading-ai").removeAttribute("id");
+                const data = await res.json();
+                const outputText = data.candidates[0].content.parts[0].text;
+                
+                document.getElementById("loader").innerText = outputText;
+                document.getElementById("loader").removeAttribute("id");
+                
+                chatSessions[activeSessionId].history.push({ role: "model", text: outputText });
             } catch (err) {
-                document.getElementById("loading-ai").innerText = "Error: Unable to connect to the Gemini engine. Check your API key entry.";
-                document.getElementById("loading-ai").removeAttribute("id");
+                document.getElementById("loader").innerText = "Connection Error: Check key syntax settings.";
+                document.getElementById("loader").removeAttribute("id");
             }
-            chatWindow.scrollTop = chatWindow.scrollHeight;
+            
+            saveSessionsToStorage();
+            renderRecentChats();
+            win.scrollTop = win.scrollHeight;
         }
     </script>
 </body>
