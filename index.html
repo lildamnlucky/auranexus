@@ -19,7 +19,7 @@
             --sandbox-bg: #ffffff;
         }
 
-        /* 🎨 THEME ENGINE PRESETS */
+        /* 🎨 MATRIX THEME PRESETS */
         body.theme-amber {
             --bg-main: #0c0702;
             --bg-sidebar: #160e05;
@@ -272,6 +272,7 @@
             display: block;
         }
 
+        /* */
         pre {
             background: rgba(0,0,0,0.3);
             padding: 14px;
@@ -428,13 +429,55 @@
 
         .sandbox-iframe { flex: 1; border: none; width: 100%; height: 100%; background: white; }
 
+        /* 🔔 CUSTOM NON-BLOCKING TOAST NOTIFICATION STYLING */
+        .toast-banner {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            background: var(--bg-sidebar);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            z-index: 1000;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s;
+            opacity: 0;
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .toast-banner.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        .toast-banner .toast-accent {
+            color: var(--accent-color);
+            font-weight: bold;
+        }
+
         @media (max-width: 1024px) {
             .sandbox-panel { position: absolute; right: 0; top: 0; z-index: 10; width: 80%; box-shadow: -5px 0 15px rgba(0,0,0,0.5); }
             .sandbox-panel.hidden { width: 0; }
         }
+        @media (max-width: 768px) {
+            .sidebar { width: 220px; }
+            .brand-title { font-size: 1.1rem; }
+        }
     </style>
 </head>
 <body>
+
+    <!-- 🔔 FLOATING TOAST NOTIFICATION SYSTEM (No more annoying browser alerts!) -->
+    <div id="toast" class="toast-banner">
+        <span class="toast-accent">AuraNexus:</span> <span id="toast-message">Notification loaded successfully.</span>
+    </div>
 
     <div class="sidebar">
         <div>
@@ -456,6 +499,7 @@
                 <button onclick="loginProfile()">Connect Account</button>
             </div>
             
+            <!-- THEME SWITCHER CONTAINER -->
             <div style="margin-top: 8px;">
                 <div class="section-heading" style="padding-left:0; margin-bottom: 6px;">Matrix Core Theme:</div>
                 <div class="theme-selector-deck">
@@ -474,7 +518,7 @@
                 <div class="brand-title" id="display-title">AuraNexus</div>
                 <div class="header-actions">
                     <button class="sandbox-toggle-btn" onclick="toggleSandboxPanel()">🛠️ Toggle Sandbox</button>
-                    <div class="status-pill" id="status-clock">⚡ ENGINE READY</div>
+                    <div class="status-pill" id="status-clock">● SYSTEM ONLINE</div>
                 </div>
             </div>
 
@@ -530,10 +574,20 @@
             startDefaultSession();
             clearSandbox();
             
-            // Re-apply saved interface theme selection configurations
             const activeTheme = localStorage.getItem("auranexus_theme") || "default";
             switchTheme(activeTheme);
         };
+
+        /* 🔔 CUSTOM INLINE NOTIFICATION BAR TRIGGER */
+        function triggerToast(message) {
+            const toast = document.getElementById("toast");
+            const toastMsg = document.getElementById("toast-message");
+            toastMsg.innerText = message;
+            toast.classList.add("show");
+            setTimeout(() => {
+                toast.classList.remove("show");
+            }, 3000);
+        }
 
         function switchTheme(themeName) {
             document.body.className = ""; // Wipe active classes
@@ -551,23 +605,34 @@
             localStorage.setItem("auranexus_theme", themeName);
         }
 
+        /* */
         function loadGlobalData() {
-            const savedUser = localStorage.getItem("current_username");
-            if (savedUser) {
-                currentUsername = savedUser;
-                document.getElementById("username-input").value = currentUsername;
-                document.getElementById("display-title").innerText = `AuraNexus (${currentUsername})`;
+            try {
+                const savedUser = localStorage.getItem("current_username");
+                if (savedUser) {
+                    currentUsername = savedUser;
+                    document.getElementById("username-input").value = currentUsername;
+                    document.getElementById("display-title").innerText = `AuraNexus (${currentUsername})`;
+                }
+                GEMINI_API_KEY = localStorage.getItem(`key_${currentUsername}`) || "";
+                if (GEMINI_API_KEY) document.getElementById("api-key-input").value = GEMINI_API_KEY;
+                
+                const savedSessions = localStorage.getItem(`sessions_${currentUsername}`);
+                chatSessions = savedSessions ? JSON.parse(savedSessions) : {};
+            } catch (err) {
+                console.error("Local Storage reset due to parser variance.", err);
+                chatSessions = {};
             }
-            GEMINI_API_KEY = localStorage.getItem(`key_${currentUsername}`) || "";
-            if (GEMINI_API_KEY) document.getElementById("api-key-input").value = GEMINI_API_KEY;
-            const savedSessions = localStorage.getItem(`sessions_${currentUsername}`);
-            chatSessions = savedSessions ? JSON.parse(savedSessions) : {};
         }
 
         function loginProfile() {
             const userIn = document.getElementById("username-input").value.trim();
             const keyIn = document.getElementById("api-key-input").value.trim();
-            if (!userIn) return alert("Please declare a username profile.");
+            
+            if (!userIn) {
+                triggerToast("Please type in a Username profile first!");
+                return;
+            }
 
             currentUsername = userIn;
             GEMINI_API_KEY = keyIn;
@@ -575,11 +640,16 @@
             localStorage.setItem(`key_${currentUsername}`, GEMINI_API_KEY);
             document.getElementById("display-title").innerText = `AuraNexus (${currentUsername})`;
 
-            const savedSessions = localStorage.getItem(`sessions_${currentUsername}`);
-            chatSessions = savedSessions ? JSON.parse(savedSessions) : {};
+            try {
+                const savedSessions = localStorage.getItem(`sessions_${currentUsername}`);
+                chatSessions = savedSessions ? JSON.parse(savedSessions) : {};
+            } catch(e) {
+                chatSessions = {};
+            }
+
             renderRecentChats();
             startDefaultSession();
-            alert(`Profile synced: ${currentUsername}`);
+            triggerToast(`Profile Synced: ${currentUsername}`);
         }
 
         function renderRecentChats() {
@@ -613,8 +683,193 @@
             document.getElementById("chat-window").innerHTML = `<div class="msg-row"><div class="avatar">AURA</div><div class="bubble-text">New sandbox console initialized. Ready to generate responses.</div></div>`;
         }
 
+        /* */
         function formatMarkdownText(rawText) {
-            const codeBlockRegex = /
-http://googleusercontent.com/immersive_entry_chip/0
+            const codeBlockRegex = /```(?:html|css|javascript|js)?([\s\S]*?)```/g;
+            return rawText.replace(codeBlockRegex, function(match, codeContent) {
+                const escapedCode = codeContent.replace(/</g, "&lt;").replace(/>/g, "&gt;").trim();
+                const structuralData = btoa(unescape(encodeURIComponent(codeContent.trim())));
+                return `<pre><code>${escapedCode}</code><button class="sandbox-inject-btn" onclick="runInSandbox('${structuralData}')">💻 Render Live</button></pre>`;
+            });
+        }
 
-Commit this updated file on GitHub, let the page rebuild, and refresh. Tap the colors in the sidebar to completely alter the workspace vibe, and look at the top right whenever you chat to check your engine latency!
+        function loadChatSession(id) {
+            if (!chatSessions[id]) return;
+            activeSessionId = id;
+            renderRecentChats();
+            const win = document.getElementById("chat-window");
+            win.innerHTML = "";
+            if (chatSessions[id].history.length === 0) return clearChatWindow();
+
+            chatSessions[id].history.forEach(msg => {
+                const row = document.createElement("div");
+                row.className = "msg-row";
+                const imgHTML = msg.imgData ? `<br><img src="data:${msg.imgType};base64,${msg.imgData}">` : "";
+                if(msg.role === "user") {
+                    row.innerHTML = `<div class="avatar" style="color:var(--text-primary);">YOU</div><div class="bubble-text">${msg.text}${imgHTML}</div>`;
+                } else {
+                    row.innerHTML = `<div class="avatar">AURA</div><div class="bubble-text">${formatMarkdownText(msg.text)}</div>`;
+                }
+                win.appendChild(row);
+            });
+            win.scrollTop = win.scrollHeight;
+        }
+
+        function saveSessionsToStorage() { 
+            try {
+                localStorage.setItem(`sessions_${currentUsername}`, JSON.stringify(chatSessions)); 
+            } catch (e) {
+                console.error("Storage save failed.", e);
+            }
+        }
+        
+        function toggleSendBtn() {
+            const input = document.getElementById("user-input").value.trim();
+            const btn = document.getElementById("send-button");
+            if (input.length > 0 || attachedImageBase64 !== "") btn.classList.add("active");
+            else btn.classList.remove("active");
+        }
+        function triggerFileSelect() { document.getElementById("file-input").click(); }
+
+        function handleFileAttachment() {
+            const fileBox = document.getElementById("file-input");
+            if (fileBox.files.length === 0) return;
+            const file = fileBox.files[0];
+            attachedImageMimeType = file.type;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                attachedImageBase64 = e.target.result.split(",")[1];
+                document.getElementById("img-display-preview").src = e.target.result;
+                document.getElementById("preview-shelf").style.display = "block";
+                toggleSendBtn();
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function clearAttachedImage() {
+            attachedImageBase64 = ""; attachedImageMimeType = "";
+            document.getElementById("file-input").value = "";
+            document.getElementById("preview-shelf").style.display = "none";
+            toggleSendBtn();
+        }
+
+        /* */
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.lang = 'en-US';
+            recognition.onresult = function(event) {
+                document.getElementById("user-input").value = event.results[0][0].transcript;
+                toggleSendBtn();
+                stopListeningMode();
+            };
+            recognition.onerror = () => stopListeningMode();
+            recognition.onend = () => stopListeningMode();
+        }
+
+        function toggleVoiceRecognition() {
+            if (!recognition) {
+                triggerToast("Voice recognition is not supported on this browser version.");
+                return;
+            }
+            if (isListening) { recognition.stop(); stopListeningMode(); }
+            else {
+                navigator.mediaDevices.getUserMedia({ audio: true }).then(() => {
+                    recognition.start();
+                    isListening = true;
+                    document.getElementById("mic-button").classList.add("listening");
+                }).catch(() => {
+                    triggerToast("Microphone permissions denied.");
+                });
+            }
+        }
+        function stopListeningMode() { isListening = false; document.getElementById("mic-button").classList.remove("listening"); }
+
+        function toggleSandboxPanel() { document.getElementById("sandbox-panel").classList.toggle("hidden"); }
+        function runInSandbox(encodedCode) {
+            const dynamicHTML = decodeURIComponent(escape(atob(encodedCode)));
+            const iframe = document.getElementById("sandbox-preview");
+            document.getElementById("sandbox-panel").classList.remove("hidden");
+            const doc = iframe.contentDocument || iframe.contentWindow.document;
+            doc.open(); doc.write(dynamicHTML); doc.close();
+        }
+        function clearSandbox() {
+            const iframe = document.getElementById("sandbox-preview");
+            const doc = iframe.contentDocument || iframe.contentWindow.document;
+            doc.open();
+            doc.write(`<html><body style="font-family:sans-serif; color:#666; display:flex; justify-content:center; align-items:center; height:90vh;"><div>Click "Render Live" to load code frames.</div></body></html>`);
+            doc.close();
+        }
+
+        /* ➔ SEND & API LOGGING PROCESSORS */
+        async function sendMessage() {
+            const inputField = document.getElementById("user-input");
+            const text = inputField.value.trim();
+            if (!text && !attachedImageBase64) return;
+            if (!GEMINI_API_KEY) {
+                triggerToast("Setup your profile username & key first!");
+                return;
+            }
+
+            const win = document.getElementById("chat-window");
+            const userRow = document.createElement("div");
+            userRow.className = "msg-row";
+            const inlineImgHTML = attachedImageBase64 ? `<br><img src="data:${attachedImageMimeType};base64,${attachedImageBase64}">` : "";
+            userRow.innerHTML = `<div class="avatar" style="color:var(--text-primary);">YOU</div><div class="bubble-text">${text}${inlineImgHTML}</div>`;
+            win.appendChild(userRow);
+
+            chatSessions[activeSessionId].history.push({ 
+                role: "user", text: text, imgData: attachedImageBase64, imgType: attachedImageMimeType
+            });
+
+            if (chatSessions[activeSessionId].title === "New Workspace Chat") {
+                chatSessions[activeSessionId].title = text ? text.substring(0, 22) + "..." : "Image Data Log";
+            }
+
+            const currentMsgText = text || "Analyze attachment data.";
+            let requestParts = [{ text: currentMsgText }];
+            if (attachedImageBase64) {
+                requestParts.push({ inlineData: { mimeType: attachedImageMimeType, data: attachedImageBase64 } });
+            }
+
+            clearAttachedImage();
+            inputField.value = "";
+            toggleSendBtn();
+            win.scrollTop = win.scrollHeight;
+
+            const aiRow = document.createElement("div");
+            aiRow.className = "msg-row";
+            aiRow.innerHTML = `<div class="avatar">AURA</div><div class="bubble-text" id="loader">Processing Request...</div>`;
+            win.appendChild(aiRow);
+            win.scrollTop = win.scrollHeight;
+
+            try {
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ contents: [{ parts: requestParts }] })
+                });
+
+                const data = await res.json();
+                const outputText = data.candidates[0].content.parts[0].text;
+                
+                const loaderEl = document.getElementById("loader");
+                loaderEl.innerHTML = formatMarkdownText(outputText);
+                loaderEl.removeAttribute("id");
+                
+                chatSessions[activeSessionId].history.push({ role: "model", text: outputText });
+            } catch (err) {
+                document.getElementById("loader").innerText = "Core processor connection issue. Verify your active API key entry.";
+                document.getElementById("loader").removeAttribute("id");
+            }
+            
+            saveSessionsToStorage();
+            renderRecentChats();
+            win.scrollTop = win.scrollHeight;
+        }
+    </script>
+</body>
+</html>
+`
