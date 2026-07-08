@@ -190,6 +190,52 @@
             color: var(--text-primary);
         }
 
+        .bubble-text img {
+            max-width: 250px;
+            border-radius: 8px;
+            margin-top: 8px;
+            display: block;
+        }
+
+        /* 🖼️ IMAGE PREVIEW CONTAINER */
+        .preview-wrapper {
+            width: 100%;
+            max-width: 720px;
+            margin: 0 auto;
+            display: none;
+            padding: 0 10px 8px 10px;
+            box-sizing: border-box;
+        }
+
+        .image-preview-box {
+            position: relative;
+            display: inline-block;
+        }
+
+        .image-preview-box img {
+            max-height: 80px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+        }
+
+        .remove-img-btn {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            background: #ea4335;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
         /* ⌨️ INTERACTION BAR */
         .input-wrapper {
             width: 100%;
@@ -271,9 +317,7 @@
 
         <div class="sidebar-middle">
             <div class="section-heading">Recent Conversations</div>
-            <div class="recent-list" id="recent-list-container">
-                <!-- Dynamically populated via javascript -->
-            </div>
+            <div class="recent-list" id="recent-list-container"></div>
         </div>
 
         <div class="profile-footer">
@@ -299,9 +343,16 @@
             </div>
         </div>
 
+        <div class="preview-wrapper" id="preview-shelf">
+            <div class="image-preview-box">
+                <img id="img-display-preview" src="">
+                <button class="remove-img-btn" onclick="clearAttachedImage()">×</button>
+            </div>
+        </div>
+
         <div class="input-wrapper">
             <button class="add-media-btn" onclick="triggerFileSelect()">＋</button>
-            <input type="file" id="file-input" onchange="handleFileAttachment()">
+            <input type="file" id="file-input" accept="image/*" onchange="handleFileAttachment()">
             <input type="text" class="main-text-input" id="user-input" placeholder="Ask AuraNexus..." oninput="toggleSendBtn()">
             <div class="interaction-cluster">
                 <button class="mic-btn" id="mic-button" onclick="toggleVoiceRecognition()">🎙️</button>
@@ -317,6 +368,10 @@
         let activeSessionId = null;
         let recognition;
         let isListening = false;
+        
+        // Image attachment states
+        let attachedImageBase64 = "";
+        let attachedImageMimeType = "";
 
         window.onload = function() {
             loadGlobalData();
@@ -424,8 +479,10 @@
             chatSessions[id].history.forEach(msg => {
                 const row = document.createElement("div");
                 row.className = "msg-row";
+                const imgHTML = msg.imgData ? `<br><img src="data:${msg.imgType};base64,${msg.imgData}">` : "";
+                
                 if(msg.role === "user") {
-                    row.innerHTML = `<div class="avatar" style="color:#e3e3e3;">YOU</div><div class="bubble-text">${msg.text}</div>`;
+                    row.innerHTML = `<div class="avatar" style="color:#e3e3e3;">YOU</div><div class="bubble-text">${msg.text}${imgHTML}</div>`;
                 } else {
                     row.innerHTML = `<div class="avatar">AURA</div><div class="bubble-text">${msg.text}</div>`;
                 }
@@ -441,7 +498,7 @@
         function toggleSendBtn() {
             const input = document.getElementById("user-input").value.trim();
             const btn = document.getElementById("send-button");
-            if (input.length > 0) btn.classList.add("active");
+            if (input.length > 0 || attachedImageBase64 !== "") btn.classList.add("active");
             else btn.classList.remove("active");
         }
 
@@ -449,14 +506,37 @@
             document.getElementById("file-input").click();
         }
 
+        /* 📸 HANDLING LOCAL RECOGNITION AND STORAGE OF IMAGES */
         function handleFileAttachment() {
             const fileBox = document.getElementById("file-input");
-            if (fileBox.files.length > 0) {
-                alert(`File selected: ${fileBox.files[0].name}. (Upgraded engine attachment ready)`);
-            }
+            if (fileBox.files.length === 0) return;
+
+            const file = fileBox.files[0];
+            attachedImageMimeType = file.type;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const fullResult = e.target.result;
+                // Strip header info from Base64 string for Gemini API compatibility
+                attachedImageBase64 = fullResult.split(",")[1];
+                
+                // Show visual preview shelf
+                document.getElementById("img-display-preview").src = fullResult;
+                document.getElementById("preview-shelf").style.display = "block";
+                toggleSendBtn();
+            };
+            reader.readAsDataURL(file);
         }
 
-        /* 🎙️ MOBILE & DESKTOP MIC SUPPORT */
+        function clearAttachedImage() {
+            attachedImageBase64 = "";
+            attachedImageMimeType = "";
+            document.getElementById("file-input").value = "";
+            document.getElementById("preview-shelf").style.display = "none";
+            toggleSendBtn();
+        }
+
+        /* 🎙️ MIC CONTROLS */
         if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             recognition = new SpeechRecognition();
@@ -465,8 +545,7 @@
             recognition.lang = 'en-US';
 
             recognition.onresult = function(event) {
-                const text = event.results[0][0].transcript;
-                document.getElementById("user-input").value = text;
+                document.getElementById("user-input").value = event.results[0][0].transcript;
                 toggleSendBtn();
                 stopListeningMode();
             };
@@ -476,70 +555,92 @@
 
         function toggleVoiceRecognition() {
             if (!recognition) {
-                alert("Voice configuration is not supported on this device browser architecture.");
+                alert("Voice architecture not supported.");
                 return;
             }
             if (isListening) {
                 recognition.stop();
                 stopListeningMode();
             } else {
-                // Request permissions directly
                 navigator.mediaDevices.getUserMedia({ audio: true })
                 .then(() => {
                     recognition.start();
                     isListening = true;
                     document.getElementById("mic-button").classList.add("listening");
-                    document.getElementById("user-input").placeholder = "Listening directly...";
                 })
-                .catch(err => alert("Microphone access was denied by your Android device systems. Check permissions."));
+                .catch(() => alert("Mic check failed. Verify permissions."));
             }
         }
 
         function stopListeningMode() {
             isListening = false;
             document.getElementById("mic-button").classList.remove("listening");
-            document.getElementById("user-input").placeholder = "Ask AuraNexus...";
         }
 
+        /* ➔ SEND MULTIMODAL API REQUEST */
         async function sendMessage() {
             const inputField = document.getElementById("user-input");
             const text = inputField.value.trim();
-            if (!text) return;
-
+            
+            if (!text && !attachedImageBase64) return;
             if (!GEMINI_API_KEY) {
-                alert("Please add your Gemini API Key first!");
+                alert("Connect your profile and API key first!");
                 return;
             }
 
             const win = document.getElementById("chat-window");
 
-            // Display user message
+            // Display message on web interface
             const userRow = document.createElement("div");
             userRow.className = "msg-row";
-            userRow.innerHTML = `<div class="avatar" style="color:#e3e3e3;">YOU</div><div class="bubble-text">${text}</div>`;
+            const inlineImgHTML = attachedImageBase64 ? `<br><img src="data:${attachedImageMimeType};base64,${attachedImageBase64}">` : "";
+            userRow.innerHTML = `<div class="avatar" style="color:#e3e3e3;">YOU</div><div class="bubble-text">${text}${inlineImgHTML}</div>`;
             win.appendChild(userRow);
 
-            // Save conversation state 
-            chatSessions[activeSessionId].history.push({ role: "user", text: text });
+            // Store history state
+            chatSessions[activeSessionId].history.push({ 
+                role: "user", 
+                text: text,
+                imgData: attachedImageBase64,
+                imgType: attachedImageMimeType
+            });
+
             if (chatSessions[activeSessionId].title === "New Workspace Chat") {
-                chatSessions[activeSessionId].title = text.substring(0, 22) + "...";
+                chatSessions[activeSessionId].title = text ? text.substring(0, 22) + "..." : "Image Analysis Workspace";
             }
 
+            // Prep request payload variables
+            const currentMsgText = text || "Analyze this image layout.";
+            const savedImageBase64 = attachedImageBase64;
+            const savedImageMimeType = attachedImageMimeType;
+
+            clearAttachedImage();
             inputField.value = "";
             toggleSendBtn();
             win.scrollTop = win.scrollHeight;
 
             const aiRow = document.createElement("div");
             aiRow.className = "msg-row";
-            aiRow.innerHTML = `<div class="avatar">AURA</div><div class="bubble-text" id="loader">Processing request...</div>`;
+            aiRow.innerHTML = `<div class="avatar">AURA</div><div class="bubble-text" id="loader">Processing Request...</div>`;
             win.appendChild(aiRow);
             win.scrollTop = win.scrollHeight;
+
+            // Build request object structure matching standard Gemini API rules
+            let requestParts = [{ text: currentMsgText }];
+            if (savedImageBase64) {
+                requestParts.push({
+                    inlineData: {
+                        mimeType: savedImageMimeType,
+                        data: savedImageBase64
+                    }
+                });
+            }
 
             try {
                 const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ contents: [{ parts: [{ text: text }] }] })
+                    body: JSON.stringify({ contents: [{ parts: requestParts }] })
                 });
 
                 const data = await res.json();
@@ -550,7 +651,7 @@
                 
                 chatSessions[activeSessionId].history.push({ role: "model", text: outputText });
             } catch (err) {
-                document.getElementById("loader").innerText = "Connection Error: Check key syntax settings.";
+                document.getElementById("loader").innerText = "Vision Integration API Connection Error.";
                 document.getElementById("loader").removeAttribute("id");
             }
             
