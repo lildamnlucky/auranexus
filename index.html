@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AuraNexus - Developer Console</title>
+    <title>Developer Console</title>
     <style>
         :root {
             --bg-main: #131314;
@@ -554,7 +554,7 @@
 
     <!-- 🔔 FLOATING TOAST NOTIFICATION SYSTEM -->
     <div id="toast" class="toast-banner">
-        <span class="toast-accent">AuraNexus:</span> <span id="toast-message">Notification loaded successfully.</span>
+        <span class="toast-accent">System:</span> <span id="toast-message">Notification loaded successfully.</span>
     </div>
 
     <div class="sidebar">
@@ -605,7 +605,7 @@
         
         <div class="chat-container">
             <div class="chat-header">
-                <div class="brand-title" id="display-title">AuraNexus</div>
+                <div class="brand-title" id="display-title">Console</div>
                 <div class="header-actions">
                     <button class="sandbox-toggle-btn" onclick="toggleSandboxPanel()">🛠️ Toggle Sandbox</button>
                     <div class="status-pill" id="status-clock">● SYSTEM ONLINE</div>
@@ -614,7 +614,7 @@
 
             <div class="chat-window" id="chat-window">
                 <div class="msg-row">
-                    <div class="avatar">AURA</div>
+                    <div class="avatar">SYSTEM</div>
                     <div class="bubble-text">System operational. Ready to test interface components.</div>
                 </div>
             </div>
@@ -629,7 +629,7 @@
             <div class="input-wrapper">
                 <button class="add-media-btn" onclick="triggerFileSelect()">＋</button>
                 <input type="file" id="file-input" accept="image/*" onchange="handleFileAttachment()">
-                <input type="text" class="main-text-input" id="user-input" placeholder="Ask AuraNexus..." oninput="toggleSendBtn()">
+                <input type="text" class="main-text-input" id="user-input" placeholder="Type a message..." oninput="toggleSendBtn()">
                 <div class="interaction-cluster">
                     <button class="mic-btn" id="mic-button" onclick="toggleVoiceRecognition()">🎙️</button>
                     <button class="send-btn" id="send-button" onclick="sendMessage()">➔</button>
@@ -707,7 +707,7 @@
                 if (savedUser) {
                     currentUsername = savedUser;
                     document.getElementById("username-input").value = currentUsername;
-                    document.getElementById("display-title").innerText = `AuraNexus (${currentUsername})`;
+                    document.getElementById("display-title").innerText = currentUsername;
                 }
                 GEMINI_API_KEY = localStorage.getItem(`key_${currentUsername}`) || "";
                 if (GEMINI_API_KEY) document.getElementById("api-key-input").value = GEMINI_API_KEY;
@@ -781,7 +781,7 @@
             GEMINI_API_KEY = keyIn;
             localStorage.setItem("current_username", currentUsername);
             localStorage.setItem(`key_${currentUsername}`, GEMINI_API_KEY);
-            document.getElementById("display-title").innerText = `AuraNexus (${currentUsername})`;
+            document.getElementById("display-title").innerText = currentUsername;
 
             try {
                 const savedSessions = localStorage.getItem(`sessions_${currentUsername}`);
@@ -828,7 +828,7 @@
         }
 
         function clearChatWindow() {
-            document.getElementById("chat-window").innerHTML = `<div class="msg-row"><div class="avatar">AURA</div><div class="bubble-text">New sandbox console initialized. Ready to generate responses.</div></div>`;
+            document.getElementById("chat-window").innerHTML = `<div class="msg-row"><div class="avatar">SYSTEM</div><div class="bubble-text">New sandbox console initialized. Ready to generate responses.</div></div>`;
         }
 
         function formatMarkdownText(rawText) {
@@ -896,7 +896,7 @@
                     const cleanText = msg.text.replace(/['"`]/g, '\\$&');
                     const speechId = `speech_${id}_${index}`;
                     row.innerHTML = `
-                        <div class="avatar">AURA</div>
+                        <div class="avatar">SYSTEM</div>
                         <div class="bubble-text">
                             ${formatMarkdownText(msg.text)}
                             <div class="msg-actions">
@@ -1035,7 +1035,7 @@
 
             const aiRow = document.createElement("div");
             aiRow.className = "msg-row";
-            aiRow.innerHTML = `<div class="avatar">AURA</div><div class="bubble-text" id="loader">Processing Request...</div>`;
+            aiRow.innerHTML = `<div class="avatar">SYSTEM</div><div class="bubble-text" id="loader">Processing Request...</div>`;
             win.appendChild(aiRow);
             win.scrollTop = win.scrollHeight;
 
