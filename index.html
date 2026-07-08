@@ -4,44 +4,48 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Developer Console</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
         :root {
             --bg-main: #131314;
-            --bg-sidebar: #1e1f20;
+            --bg-sidebar: rgba(30, 31, 32, 0.85);
             --text-primary: #e3e3e3;
             --text-secondary: #c4c7c5;
             --text-dim: #9e9e9e;
-            --input-bg: #1e1f20;
-            --input-focus: #28292a;
+            --input-bg: rgba(30, 31, 32, 0.8);
+            --input-focus: rgba(40, 41, 42, 0.95);
             --border-color: #444746;
             --accent-color: #a855f7;
             --mic-active: #ea4335;
             --sandbox-bg: #ffffff;
+            --overlay-panel: rgba(19, 19, 20, 0.75);
         }
 
         /* 🎨 THEME PRESETS */
         body.theme-amber {
             --bg-main: #0c0702;
-            --bg-sidebar: #160e05;
+            --bg-sidebar: rgba(22, 14, 5, 0.85);
             --text-primary: #ffb041;
             --text-secondary: #e0962f;
             --text-dim: #a66f22;
-            --input-bg: #1b1107;
-            --input-focus: #26180b;
+            --input-bg: rgba(27, 17, 7, 0.8);
+            --input-focus: rgba(38, 24, 11, 0.95);
             --border-color: #ffb041;
             --accent-color: #ff9100;
+            --overlay-panel: rgba(12, 7, 2, 0.75);
         }
 
         body.theme-matrix {
             --bg-main: #030704;
-            --bg-sidebar: #09110a;
+            --bg-sidebar: rgba(9, 17, 10, 0.85);
             --text-primary: #39ff14;
             --text-secondary: #26cc0f;
             --text-dim: #1a8c0a;
-            --input-bg: #0d1a10;
-            --input-focus: #142617;
+            --input-bg: rgba(13, 26, 16, 0.8);
+            --input-focus: rgba(20, 38, 23, 0.95);
             --border-color: #39ff14;
             --accent-color: #00ff66;
+            --overlay-panel: rgba(3, 7, 4, 0.75);
         }
 
         body {
@@ -54,12 +58,27 @@
             height: 100vh;
             overflow: hidden;
             transition: background 0.2s, color 0.2s;
+            position: relative;
         }
 
-        /* 📋 SIDEBAR NAV PANEL */
+        /* 🌌 3D BACKDROP CANVAS */
+        #three-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+            opacity: 0.85;
+        }
+
+        /* */
         .sidebar {
             width: 280px;
             background-color: var(--bg-sidebar);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             display: flex;
             flex-direction: column;
             padding: 16px;
@@ -67,6 +86,7 @@
             justify-content: space-between;
             flex-shrink: 0;
             border-right: 1px solid var(--border-color);
+            z-index: 2;
             transition: background 0.2s;
         }
 
@@ -121,7 +141,6 @@
             border-left: 2px solid var(--accent-color);
         }
 
-        /* 🎮 RPG LEVEL / XP SYSTEMS CARD DESIGN */
         .xp-card {
             background: rgba(255, 255, 255, 0.03);
             border: 1px solid var(--border-color);
@@ -186,7 +205,6 @@
             font-size: 0.85rem;
         }
 
-        /* 🎨 SWITCH THEME SWITCH PANEL */
         .theme-selector-deck {
             display: flex;
             align-items: center;
@@ -214,9 +232,10 @@
             display: flex;
             height: 100%;
             position: relative;
+            z-index: 1;
         }
 
-        /* 🤖 CHAT CONSOLE AREA */
+        /* */
         .chat-container {
             flex: 1;
             display: flex;
@@ -233,6 +252,12 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            background: var(--overlay-panel);
+            padding: 12px 20px;
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
         }
 
         .brand-title {
@@ -243,7 +268,14 @@
         .header-actions {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 16px;
+        }
+
+        #hud-visualizer {
+            width: 110px;
+            height: 28px;
+            background: transparent;
+            border-radius: 6px;
         }
 
         .status-pill {
@@ -281,6 +313,12 @@
         .msg-row {
             display: flex;
             gap: 16px;
+            background: var(--overlay-panel);
+            padding: 16px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
         }
 
         .avatar {
@@ -306,7 +344,7 @@
         }
 
         pre {
-            background: rgba(0,0,0,0.3);
+            background: rgba(0,0,0,0.4);
             padding: 14px;
             border-radius: 8px;
             overflow-x: auto;
@@ -320,7 +358,6 @@
             font-size: 0.95rem;
         }
 
-        /* 💻 EXTENDED CODE ACTIONS PANEL */
         .code-actions {
             position: absolute;
             top: 8px;
@@ -354,7 +391,6 @@
             transform: scale(1.05);
         }
 
-        /* 🔊 AUDIO ACTIONS LAYOUT */
         .msg-actions {
             margin-top: 8px;
             display: flex;
@@ -417,7 +453,7 @@
             justify-content: center;
         }
 
-        /* ⌨️ INTERACTION BAR */
+        /* */
         .input-wrapper {
             width: 100%;
             max-width: 720px;
@@ -429,6 +465,8 @@
             align-items: center;
             box-sizing: border-box;
             border: 1px solid var(--border-color);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
         }
 
         .add-media-btn {
@@ -470,7 +508,6 @@
 
         #file-input { display: none; }
 
-        /* 🖥️ LIVE SANDBOX SPLIT WINDOW */
         .sandbox-panel {
             width: 45%;
             height: 100%;
@@ -507,7 +544,6 @@
 
         .sandbox-iframe { flex: 1; border: none; width: 100%; height: 100%; background: white; }
 
-        /* 🔔 CUSTOM NON-BLOCKING TOAST NOTIFICATION */
         .toast-banner {
             position: fixed;
             top: 20px;
@@ -547,10 +583,14 @@
         @media (max-width: 768px) {
             .sidebar { width: 220px; }
             .brand-title { font-size: 1.1rem; }
+            #hud-visualizer { width: 70px; }
         }
     </style>
 </head>
 <body>
+
+    <!-- 🌌 INTERACTIVE BACKGROUND MATRIX -->
+    <canvas id="three-bg"></canvas>
 
     <!-- 🔔 FLOATING TOAST NOTIFICATION SYSTEM -->
     <div id="toast" class="toast-banner">
@@ -608,6 +648,10 @@
                 <div class="brand-title" id="display-title">Console</div>
                 <div class="header-actions">
                     <button class="sandbox-toggle-btn" onclick="toggleSandboxPanel()">🛠️ Toggle Sandbox</button>
+                    
+                    <!-- 🌌 HOLOGRAPHIC AUDIO STATE CANVAS -->
+                    <canvas id="hud-visualizer"></canvas>
+
                     <div class="status-pill" id="status-clock">● SYSTEM ONLINE</div>
                 </div>
             </div>
@@ -629,7 +673,8 @@
             <div class="input-wrapper">
                 <button class="add-media-btn" onclick="triggerFileSelect()">＋</button>
                 <input type="file" id="file-input" accept="image/*" onchange="handleFileAttachment()">
-                <input type="text" class="main-text-input" id="user-input" placeholder="Type a message..." oninput="toggleSendBtn()">
+                <!-- Satisfying audio sync linked on input trigger events -->
+                <input type="text" class="main-text-input" id="user-input" placeholder="Type a message..." oninput="handleTextInput(this)">
                 <div class="interaction-cluster">
                     <button class="mic-btn" id="mic-button" onclick="toggleVoiceRecognition()">🎙️</button>
                     <button class="send-btn" id="send-button" onclick="sendMessage()">➔</button>
@@ -664,6 +709,20 @@
         let userXP = 0;
         let userLevel = 1;
 
+        // Holographic visualizer States
+        let visualizerCanvas, visualizerCtx;
+        let visualizerState = "idle"; // idle, computing, listening, speaking
+        let animationFrameId;
+        let phase = 0;
+
+        // Sound FX Settings
+        let audioCtx = null;
+
+        // 3D Three.js space elements
+        let scene, camera, renderer, particles;
+        let targetRotationX = 0, targetRotationY = 0;
+        let currentRotationX = 0, currentRotationY = 0;
+
         window.onload = function() {
             loadGlobalData();
             renderRecentChats();
@@ -672,9 +731,234 @@
             
             const activeTheme = localStorage.getItem("auranexus_theme") || "default";
             switchTheme(activeTheme);
+
+            initVisualizer();
+            init3DSpace();
         };
 
-        /* 🔔 CUSTOM INLINE TOAST NOTIFICATION TRIGGER */
+        function initAudioContext() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        // Synthesizes a futuristic, soft sci-fi keyboard click on demand
+        function playKeyboardSound() {
+            try {
+                initAudioContext();
+                if (!audioCtx) return;
+
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                // Quick satisfying sound envelope
+                osc.type = "sine";
+                const now = audioCtx.currentTime;
+                osc.frequency.setValueAtTime(800 + Math.random() * 200, now);
+                osc.frequency.exponentialRampToValueAtTime(150, now + 0.04);
+
+                gain.gain.setValueAtTime(0.04, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+
+                osc.start(now);
+                osc.stop(now + 0.05);
+            } catch (e) {
+                // Audio synthesis bypassed if browser blocks initial focus
+            }
+        }
+
+        function handleTextInput(element) {
+            playKeyboardSound();
+            toggleSendBtn();
+        }
+
+        function init3DSpace() {
+            const canvas = document.getElementById("three-bg");
+            if (!canvas) return;
+
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 1000);
+            camera.position.z = 250;
+
+            renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+            // Generate Drifting Space Particles
+            const particleCount = 450;
+            const geometry = new THREE.BufferGeometry();
+            const positions = new Float32Array(particleCount * 3);
+
+            for (let i = 0; i < particleCount * 3; i += 3) {
+                positions[i] = (Math.random() - 0.5) * 600;     // X coordinate
+                positions[i + 1] = (Math.random() - 0.5) * 600; // Y coordinate
+                positions[i + 2] = (Math.random() - 0.5) * 500; // Z coordinate
+            }
+
+            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+
+            // Get Current Theme Accent Color
+            const accentColorStr = getComputedStyle(document.body).getPropertyValue('--accent-color').trim() || '#a855f7';
+            
+            // Build Circular Particle Texture dynamically
+            const pMaterial = new THREE.PointsMaterial({
+                color: new THREE.Color(accentColorStr),
+                size: 3.5,
+                transparent: true,
+                opacity: 0.8,
+                blending: THREE.AdditiveBlending
+            });
+
+            particles = new THREE.Points(geometry, pMaterial);
+            scene.add(particles);
+
+            // Add subtle responsive grid
+            const gridHelper = new THREE.GridHelper(500, 30, accentColorStr, accentColorStr);
+            gridHelper.position.y = -180;
+            gridHelper.material.opacity = 0.15;
+            gridHelper.material.transparent = true;
+            scene.add(gridHelper);
+
+            // Touch & Mouse Attractor Listener bindings
+            window.addEventListener('mousemove', handleInteractionMovement);
+            window.addEventListener('touchmove', handleInteractionTouch);
+            window.addEventListener('resize', onWindowResize);
+
+            animate3DSpace();
+        }
+
+        function handleInteractionMovement(event) {
+            targetRotationY = (event.clientX / window.innerWidth - 0.5) * 0.4;
+            targetRotationX = (event.clientY / window.innerHeight - 0.5) * 0.4;
+        }
+
+        function handleInteractionTouch(event) {
+            if (event.touches.length > 0) {
+                targetRotationY = (event.touches[0].clientX / window.innerWidth - 0.5) * 0.5;
+                targetRotationX = (event.touches[0].clientY / window.innerHeight - 0.5) * 0.5;
+            }
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            resizeVisualizerCanvas();
+        }
+
+        function animate3DSpace() {
+            requestAnimationFrame(animate3DSpace);
+
+            // Drifting orbit animations
+            if (particles) {
+                particles.rotation.y += 0.0006;
+                particles.rotation.x += 0.0002;
+
+                // Ease rotation towards touch tracking target
+                currentRotationY += (targetRotationY - currentRotationY) * 0.05;
+                currentRotationX += (targetRotationX - currentRotationX) * 0.05;
+
+                particles.rotation.y += currentRotationY * 0.1;
+                particles.rotation.x += currentRotationX * 0.1;
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        function initVisualizer() {
+            visualizerCanvas = document.getElementById("hud-visualizer");
+            if (!visualizerCanvas) return;
+            visualizerCtx = visualizerCanvas.getContext("2d");
+            resizeVisualizerCanvas();
+            window.addEventListener('resize', resizeVisualizerCanvas);
+            animateVisualizer();
+        }
+
+        function resizeVisualizerCanvas() {
+            if (!visualizerCanvas) return;
+            const rect = visualizerCanvas.getBoundingClientRect();
+            visualizerCanvas.width = rect.width * window.devicePixelRatio;
+            visualizerCanvas.height = rect.height * window.devicePixelRatio;
+            visualizerCtx.scale(window.devicePixelRatio, window.devicePixelRatio);
+        }
+
+        function hexToRGBA(hex, alpha) {
+            hex = hex.replace('#', '');
+            if (hex.length === 3) {
+                hex = hex.split('').map(char => char + char).join('');
+            }
+            if (hex === "a855f7" || hex.includes("a855f7")) return `rgba(168, 85, 247, ${alpha})`;
+            if (hex === "ff9100" || hex.includes("ff9100")) return `rgba(255, 145, 0, ${alpha})`;
+            if (hex === "00ff66" || hex.includes("00ff66")) return `rgba(0, 255, 102, ${alpha})`;
+            
+            const r = parseInt(hex.substring(0, 2), 16) || 168;
+            const g = parseInt(hex.substring(2, 4), 16) || 85;
+            const b = parseInt(hex.substring(4, 6), 16) || 247;
+            return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        }
+
+        function animateVisualizer() {
+            if (!visualizerCanvas || !visualizerCtx) return;
+            visualizerCtx.clearRect(0, 0, visualizerCanvas.clientWidth, visualizerCanvas.clientHeight);
+
+            const accentColor = getComputedStyle(document.body).getPropertyValue('--accent-color').trim() || '#a855f7';
+            visualizerCtx.lineWidth = 1.5;
+            visualizerCtx.shadowColor = accentColor;
+            visualizerCtx.shadowBlur = 4;
+
+            const width = visualizerCanvas.clientWidth;
+            const height = visualizerCanvas.clientHeight;
+            const midY = height / 2;
+
+            phase += 0.15;
+
+            let numWaves = 1;
+            let amplitudeMultiplier = 1;
+            let frequencyMultiplier = 1;
+
+            if (visualizerState === "computing") {
+                numWaves = 3;
+                amplitudeMultiplier = 1.2;
+                frequencyMultiplier = 3.0;
+                phase += 0.08; 
+            } else if (visualizerState === "listening") {
+                numWaves = 2;
+                amplitudeMultiplier = 1.7;
+                frequencyMultiplier = 1.4;
+            } else if (visualizerState === "speaking") {
+                numWaves = 2;
+                amplitudeMultiplier = 1.3;
+                frequencyMultiplier = 0.9;
+            } else { // idle
+                numWaves = 1;
+                amplitudeMultiplier = 0.25;
+                frequencyMultiplier = 0.6;
+                visualizerCtx.shadowBlur = 1;
+            }
+
+            for (let w = 0; w < numWaves; w++) {
+                visualizerCtx.beginPath();
+                const offset = w * Math.PI / 1.8;
+                const amp = (height / 2.6) * amplitudeMultiplier * (w === 0 ? 1 : 0.4);
+
+                for (let x = 0; x <= width; x++) {
+                    const progress = x / width;
+                    const edgeMask = Math.sin(progress * Math.PI); // Pin visual boundaries
+                    const y = midY + Math.sin(progress * Math.PI * 2 * frequencyMultiplier + phase + offset) * amp * edgeMask;
+
+                    if (x === 0) visualizerCtx.moveTo(x, y);
+                    else visualizerCtx.lineTo(x, y);
+                }
+                visualizerCtx.strokeStyle = w === 0 ? accentColor : hexToRGBA(accentColor, 0.35);
+                visualizerCtx.stroke();
+            }
+
+            animationFrameId = requestAnimationFrame(animateVisualizer);
+        }
+
         function triggerToast(message) {
             const toast = document.getElementById("toast");
             const toastMsg = document.getElementById("toast-message");
@@ -699,6 +983,12 @@
                 document.querySelector(".dot-purple").classList.add("active");
             }
             localStorage.setItem("auranexus_theme", themeName);
+
+            // Dynamically update existing 3D particles to match the selected system color
+            if (particles) {
+                const accentColorStr = getComputedStyle(document.body).getPropertyValue('--accent-color').trim() || '#a855f7';
+                particles.material.color.set(accentColorStr);
+            }
         }
 
         function loadGlobalData() {
@@ -787,7 +1077,6 @@
                 const savedSessions = localStorage.getItem(`sessions_${currentUsername}`);
                 chatSessions = savedSessions ? JSON.parse(savedSessions) : {};
                 
-                // Switch stats profile
                 userXP = parseInt(localStorage.getItem(`xp_${currentUsername}`)) || 0;
                 userLevel = parseInt(localStorage.getItem(`level_${currentUsername}`)) || 1;
                 updateXPDisplay();
@@ -859,6 +1148,7 @@
         function speakMessage(btnId, rawText) {
             if (window.speechSynthesis.speaking) {
                 window.speechSynthesis.cancel();
+                visualizerState = "idle";
                 if (currentUtterance && currentUtterance.btnId === btnId) {
                     currentUtterance = null;
                     return;
@@ -870,6 +1160,10 @@
             const utterance = new SpeechSynthesisUtterance(cleanSpokenText);
             utterance.btnId = btnId;
             currentUtterance = utterance;
+
+            utterance.onstart = () => { visualizerState = "speaking"; };
+            utterance.onend = () => { visualizerState = "idle"; };
+            utterance.onerror = () => { visualizerState = "idle"; };
 
             const voices = window.speechSynthesis.getVoices();
             const preferredVoice = voices.find(v => v.name.includes("Google US English") || v.name.includes("Natural"));
@@ -970,6 +1264,7 @@
             if (isListening) { recognition.stop(); stopListeningMode(); }
             else {
                 navigator.mediaDevices.getUserMedia({ audio: true }).then(() => {
+                    visualizerState = "listening";
                     recognition.start();
                     isListening = true;
                     document.getElementById("mic-button").classList.add("listening");
@@ -978,7 +1273,11 @@
                 });
             }
         }
-        function stopListeningMode() { isListening = false; document.getElementById("mic-button").classList.remove("listening"); }
+        function stopListeningMode() { 
+            isListening = false; 
+            visualizerState = "idle";
+            document.getElementById("mic-button").classList.remove("listening"); 
+        }
 
         function toggleSandboxPanel() { document.getElementById("sandbox-panel").classList.toggle("hidden"); }
         
@@ -1005,6 +1304,10 @@
             if (!GEMINI_API_KEY) {
                 triggerToast("Setup your profile username & key first!");
                 return;
+            }
+
+            if (window.speechSynthesis.speaking) {
+                window.speechSynthesis.cancel();
             }
 
             const win = document.getElementById("chat-window");
@@ -1039,9 +1342,9 @@
             win.appendChild(aiRow);
             win.scrollTop = win.scrollHeight;
 
-            // Timer Capture
             const startTime = performance.now();
             document.getElementById("status-clock").innerText = "⏳ COMPUTING...";
+            visualizerState = "computing";
 
             try {
                 const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
@@ -1053,10 +1356,10 @@
                 const data = await res.json();
                 const outputText = data.candidates[0].content.parts[0].text;
                 
-                // End Speed Calculation
                 const endTime = performance.now();
                 const latency = Math.round(endTime - startTime);
                 document.getElementById("status-clock").innerText = `⚡ ENGINE READY (${latency}ms)`;
+                visualizerState = "idle";
 
                 const loaderEl = document.getElementById("loader");
                 const currentMsgIndex = chatSessions[activeSessionId].history.length;
@@ -1072,12 +1375,12 @@
                 
                 chatSessions[activeSessionId].history.push({ role: "model", text: outputText });
 
-                // Add random XP points to level progress stats
                 addXP(Math.floor(Math.random() * 15) + 15);
             } catch (err) {
                 document.getElementById("loader").innerText = "Core processor connection issue. Verify your active API key entry.";
                 document.getElementById("loader").removeAttribute("id");
                 document.getElementById("status-clock").innerText = "❌ ENGINE ERROR";
+                visualizerState = "idle";
             }
             
             saveSessionsToStorage();
