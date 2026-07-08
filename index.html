@@ -288,10 +288,16 @@
             font-size: 0.95rem;
         }
 
-        .sandbox-inject-btn {
+        /* 💻 EXTENDED CODE ACTIONS PANEL */
+        .code-actions {
             position: absolute;
             top: 8px;
             right: 8px;
+            display: flex;
+            gap: 6px;
+        }
+
+        .sandbox-inject-btn, .copy-code-btn {
             background: var(--accent-color);
             color: #000;
             border: none;
@@ -300,6 +306,81 @@
             font-size: 0.75rem;
             cursor: pointer;
             font-weight: bold;
+            transition: transform 0.1s;
+        }
+
+        .sandbox-inject-btn:hover { transform: scale(1.05); }
+
+        .copy-code-btn {
+            background: rgba(255, 255, 255, 0.15);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .copy-code-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: scale(1.05);
+        }
+
+        /* 💡 QUICK PROMPTS CHIPS ROW */
+        .quick-prompts-deck {
+            width: 100%;
+            max-width: 720px;
+            margin: 0 auto 10px auto;
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding: 4px 8px;
+            box-sizing: border-box;
+            scrollbar-width: none;
+        }
+
+        .quick-prompts-deck::-webkit-scrollbar {
+            display: none;
+        }
+
+        .prompt-chip {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 6px 14px;
+            border-radius: 16px;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .prompt-chip:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--accent-color);
+            color: var(--text-primary);
+        }
+
+        /* 🔊 AUDIO MESSAGE ACTION ROW */
+        .msg-actions {
+            margin-top: 8px;
+            display: flex;
+            gap: 12px;
+        }
+
+        .action-icon-btn {
+            background: none;
+            border: none;
+            color: var(--text-dim);
+            font-size: 0.8rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 6px;
+            border-radius: 10px;
+            transition: all 0.2s;
+        }
+
+        .action-icon-btn:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--accent-color);
         }
 
         .preview-wrapper {
@@ -536,6 +617,14 @@
                 </div>
             </div>
 
+            <!-- QUICK PROMPTS SHORTCUT ROW -->
+            <div class="quick-prompts-deck" id="quick-prompts-deck">
+                <button class="prompt-chip" onclick="applyQuickPrompt('snake')">🎮 Play Snake</button>
+                <button class="prompt-chip" onclick="applyQuickPrompt('clock')">⏱️ Glowing Clock</button>
+                <button class="prompt-chip" onclick="applyQuickPrompt('card')">🃏 Glass Card</button>
+                <button class="prompt-chip" onclick="applyQuickPrompt('button')">✨ Bouncy Buttons</button>
+            </div>
+
             <div class="input-wrapper">
                 <button class="add-media-btn" onclick="triggerFileSelect()">＋</button>
                 <input type="file" id="file-input" accept="image/*" onchange="handleFileAttachment()">
@@ -567,6 +656,8 @@
         
         let attachedImageBase64 = "";
         let attachedImageMimeType = "";
+
+        let currentUtterance = null;
 
         window.onload = function() {
             loadGlobalData();
@@ -683,14 +774,72 @@
             document.getElementById("chat-window").innerHTML = `<div class="msg-row"><div class="avatar">AURA</div><div class="bubble-text">New sandbox console initialized. Ready to generate responses.</div></div>`;
         }
 
-        /* */
+        /* 💻 DYNAMIC MARKDOWN PARSER WITH ACTIONS WRAPPER */
         function formatMarkdownText(rawText) {
             const codeBlockRegex = /```(?:html|css|javascript|js)?([\s\S]*?)```/g;
             return rawText.replace(codeBlockRegex, function(match, codeContent) {
                 const escapedCode = codeContent.replace(/</g, "&lt;").replace(/>/g, "&gt;").trim();
                 const structuralData = btoa(unescape(encodeURIComponent(codeContent.trim())));
-                return `<pre><code>${escapedCode}</code><button class="sandbox-inject-btn" onclick="runInSandbox('${structuralData}')">💻 Render Live</button></pre>`;
+                return `<pre><code>${escapedCode}</code><div class="code-actions"><button class="sandbox-inject-btn" onclick="runInSandbox('${structuralData}')">💻 Render Live</button><button class="copy-code-btn" onclick="copyToClipboard('${structuralData}')">📋 Copy Code</button></div></pre>`;
             });
+        }
+
+        /* 📋 DIRECT TABLET COPY UTILITY FALLBACK */
+        function copyToClipboard(encodedCode) {
+            const dynamicHTML = decodeURIComponent(escape(atob(encodedCode)));
+            const textarea = document.createElement("textarea");
+            textarea.value = dynamicHTML;
+            textarea.style.position = "fixed";
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                triggerToast("Layout code copied to clipboard!");
+            } catch (err) {
+                triggerToast("Copy action unsupported on this device.");
+            }
+            document.body.removeChild(textarea);
+        }
+
+        /* 🔊 TEXT TO SPEECH DICTATION LAYER */
+        function speakMessage(btnId, rawText) {
+            if (window.speechSynthesis.speaking) {
+                window.speechSynthesis.cancel();
+                if (currentUtterance && currentUtterance.btnId === btnId) {
+                    currentUtterance = null;
+                    return; // Toggle stop speech
+                }
+            }
+
+            // Stripping markdown blocks out of audio reading stream
+            const cleanSpokenText = rawText.replace(/```[\s\S]*?```/g, "[Skipping code block]").replace(/<[^>]*>/g, "");
+            
+            const utterance = new SpeechSynthesisUtterance(cleanSpokenText);
+            utterance.btnId = btnId;
+            currentUtterance = utterance;
+
+            const voices = window.speechSynthesis.getVoices();
+            // Choose modern clean audio voice profile if present
+            const preferredVoice = voices.find(v => v.name.includes("Google US English") || v.name.includes("Natural"));
+            if (preferredVoice) utterance.voice = preferredVoice;
+
+            window.speechSynthesis.speak(utterance);
+        }
+
+        /* 💡 AUTOMATED PROMPT CHIP INJECTOR */
+        function applyQuickPrompt(type) {
+            const inputField = document.getElementById("user-input");
+            if (type === 'snake') {
+                inputField.value = "Create a classic fully playable Snake Game inside an HTML canvas element. Make it responsive with colorful arcade styling.";
+            } else if (type === 'clock') {
+                inputField.value = "Create a modern sci-fi dark style digital clock layout with glowing purple text and smooth loading transition animations.";
+            } else if (type === 'card') {
+                inputField.value = "Design a beautiful modern glassmorphic profile card using translucent blurred panels and dynamic grid shadow layouts.";
+            } else if (type === 'button') {
+                inputField.value = "Create three buttons featuring intense fluid interactive micro-interactions: infinite hover glow pulse, bouncy active scale spring, and rolling color fill.";
+            }
+            toggleSendBtn();
+            inputField.focus();
         }
 
         function loadChatSession(id) {
@@ -701,14 +850,23 @@
             win.innerHTML = "";
             if (chatSessions[id].history.length === 0) return clearChatWindow();
 
-            chatSessions[id].history.forEach(msg => {
+            chatSessions[id].history.forEach((msg, index) => {
                 const row = document.createElement("div");
                 row.className = "msg-row";
                 const imgHTML = msg.imgData ? `<br><img src="data:${msg.imgType};base64,${msg.imgData}">` : "";
                 if(msg.role === "user") {
                     row.innerHTML = `<div class="avatar" style="color:var(--text-primary);">YOU</div><div class="bubble-text">${msg.text}${imgHTML}</div>`;
                 } else {
-                    row.innerHTML = `<div class="avatar">AURA</div><div class="bubble-text">${formatMarkdownText(msg.text)}</div>`;
+                    const cleanText = msg.text.replace(/['"`]/g, '\\$&'); // Escaped quotes safety
+                    const speechId = `speech_${id}_${index}`;
+                    row.innerHTML = `
+                        <div class="avatar">AURA</div>
+                        <div class="bubble-text">
+                            ${formatMarkdownText(msg.text)}
+                            <div class="msg-actions">
+                                <button class="action-icon-btn" onclick="speakMessage('${speechId}', \`${cleanText}\`)">🔊 Listen</button>
+                            </div>
+                        </div>`;
                 }
                 win.appendChild(row);
             });
