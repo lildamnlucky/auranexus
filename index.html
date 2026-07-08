@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AuraNexus</title>
+    <title>AuraNexus - Sandbox Engine</title>
     <style>
         :root {
             --bg-main: #131314;
@@ -16,6 +16,7 @@
             --border-color: #444746;
             --accent-color: #a855f7;
             --mic-active: #ea4335;
+            --sandbox-bg: #ffffff;
         }
 
         body {
@@ -39,6 +40,7 @@
             box-sizing: border-box;
             justify-content: space-between;
             flex-shrink: 0;
+            border-right: 1px solid var(--border-color);
         }
 
         .new-chat-btn {
@@ -130,6 +132,14 @@
             margin-bottom: 4px;
         }
 
+        /* 主体工作区架构 */
+        .workspace-wrapper {
+            flex: 1;
+            display: flex;
+            height: 100%;
+            position: relative;
+        }
+
         /* 🤖 CHAT CONSOLE AREA */
         .chat-container {
             flex: 1;
@@ -139,6 +149,8 @@
             padding: 24px;
             position: relative;
             min-width: 0;
+            height: 100%;
+            box-sizing: border-box;
         }
 
         .chat-header {
@@ -152,6 +164,12 @@
             font-weight: 500;
         }
 
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
         .status-pill {
             font-size: 0.75rem;
             font-weight: bold;
@@ -159,6 +177,17 @@
             background: rgba(16, 185, 129, 0.1);
             padding: 4px 10px;
             border-radius: 12px;
+        }
+
+        .sandbox-toggle-btn {
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            cursor: pointer;
         }
 
         .chat-window {
@@ -188,6 +217,7 @@
             line-height: 1.6;
             font-size: 1.05rem;
             color: var(--text-primary);
+            width: 100%;
         }
 
         .bubble-text img {
@@ -195,6 +225,41 @@
             border-radius: 8px;
             margin-top: 8px;
             display: block;
+        }
+
+        /* CODE FORMATTING & BUTTONS */
+        pre {
+            background: #282a36;
+            padding: 14px;
+            border-radius: 8px;
+            overflow-x: auto;
+            position: relative;
+            margin: 12px 0;
+            border: 1px solid var(--border-color);
+        }
+
+        code {
+            font-family: "Courier New", Courier, monospace;
+            font-size: 0.95rem;
+            color: #f8f8f2;
+        }
+
+        .sandbox-inject-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: rgba(168, 85, 247, 0.8);
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .sandbox-inject-btn:hover {
+            background: var(--accent-color);
         }
 
         /* 🖼️ IMAGE PREVIEW CONTAINER */
@@ -300,9 +365,65 @@
 
         #file-input { display: none; }
 
-        @media (max-width: 768px) {
-            .sidebar { width: 200px; padding: 12px; }
-            .brand-title span, .status-pill { display: none; }
+        /* 🖥️ LIVE SANDBOX SPLIT WINDOW */
+        .sandbox-panel {
+            width: 45%;
+            height: 100%;
+            background-color: var(--sandbox-bg);
+            border-left: 2px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            transition: width 0.3s ease;
+            flex-shrink: 0;
+        }
+
+        .sandbox-panel.hidden {
+            width: 0;
+            overflow: hidden;
+            border-left: none;
+        }
+
+        .sandbox-toolbar {
+            background-color: #2b2a2a;
+            color: white;
+            padding: 10px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+            font-weight: bold;
+        }
+
+        .sandbox-clear-btn {
+            background: #ea4335;
+            border: none;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.75rem;
+        }
+
+        .sandbox-iframe {
+            flex: 1;
+            border: none;
+            width: 100%;
+            height: 100%;
+            background: white;
+        }
+
+        @media (max-width: 1024px) {
+            .sandbox-panel {
+                position: absolute;
+                right: 0;
+                top: 0;
+                z-index: 10;
+                width: 80%;
+                box-shadow: -5px 0 15px rgba(0,0,0,0.5);
+            }
+            .sandbox-panel.hidden {
+                width: 0;
+            }
         }
     </style>
 </head>
@@ -330,35 +451,53 @@
         </div>
     </div>
 
-    <div class="chat-container">
-        <div class="chat-header">
-            <div class="brand-title" id="display-title">AuraNexus</div>
-            <div class="status-pill">● SYSTEM ONLINE</div>
-        </div>
+    <div class="workspace-wrapper">
+        
+        <!-- MAIN CHAT BOX -->
+        <div class="chat-container">
+            <div class="chat-header">
+                <div class="brand-title" id="display-title">AuraNexus</div>
+                <div class="header-actions">
+                    <button class="sandbox-toggle-btn" onclick="toggleSandboxPanel()">🛠️ Toggle Sandbox</button>
+                    <div class="status-pill">● SYSTEM ONLINE</div>
+                </div>
+            </div>
 
-        <div class="chat-window" id="chat-window">
-            <div class="msg-row">
-                <div class="avatar">AURA</div>
-                <div class="bubble-text">Setup complete. Connect a profile username and API key on the left panel to load saved workspaces.</div>
+            <div class="chat-window" id="chat-window">
+                <div class="msg-row">
+                    <div class="avatar">AURA</div>
+                    <div class="bubble-text">Setup complete. Ask me to design any HTML/CSS component, then tap the "Render Live" button that pops up over the code frame!</div>
+                </div>
+            </div>
+
+            <!-- Attached Image Preview Shelf -->
+            <div class="preview-wrapper" id="preview-shelf">
+                <div class="image-preview-box">
+                    <img id="img-display-preview" src="">
+                    <button class="remove-img-btn" onclick="clearAttachedImage()">×</button>
+                </div>
+            </div>
+
+            <div class="input-wrapper">
+                <button class="add-media-btn" onclick="triggerFileSelect()">＋</button>
+                <input type="file" id="file-input" accept="image/*" onchange="handleFileAttachment()">
+                <input type="text" class="main-text-input" id="user-input" placeholder="Ask AuraNexus..." oninput="toggleSendBtn()">
+                <div class="interaction-cluster">
+                    <button class="mic-btn" id="mic-button" onclick="toggleVoiceRecognition()">🎙️</button>
+                    <button class="send-btn" id="send-button" onclick="sendMessage()">➔</button>
+                </div>
             </div>
         </div>
 
-        <div class="preview-wrapper" id="preview-shelf">
-            <div class="image-preview-box">
-                <img id="img-display-preview" src="">
-                <button class="remove-img-btn" onclick="clearAttachedImage()">×</button>
+        <!-- 🖥️ LIVE SANDBOX RUNTIME CANVAS -->
+        <div class="sandbox-panel hidden" id="sandbox-panel">
+            <div class="sandbox-toolbar">
+                <span>🖥️ LIVE RENDER CANVAS</span>
+                <button class="sandbox-clear-btn" onclick="clearSandbox()">Clear</button>
             </div>
+            <iframe class="sandbox-iframe" id="sandbox-preview"></iframe>
         </div>
 
-        <div class="input-wrapper">
-            <button class="add-media-btn" onclick="triggerFileSelect()">＋</button>
-            <input type="file" id="file-input" accept="image/*" onchange="handleFileAttachment()">
-            <input type="text" class="main-text-input" id="user-input" placeholder="Ask AuraNexus..." oninput="toggleSendBtn()">
-            <div class="interaction-cluster">
-                <button class="mic-btn" id="mic-button" onclick="toggleVoiceRecognition()">🎙️</button>
-                <button class="send-btn" id="send-button" onclick="sendMessage()">➔</button>
-            </div>
-        </div>
     </div>
 
     <script>
@@ -369,7 +508,6 @@
         let recognition;
         let isListening = false;
         
-        // Image attachment states
         let attachedImageBase64 = "";
         let attachedImageMimeType = "";
 
@@ -377,6 +515,7 @@
             loadGlobalData();
             renderRecentChats();
             startDefaultSession();
+            clearSandbox();
         };
 
         function loadGlobalData() {
@@ -463,6 +602,21 @@
             win.innerHTML = `<div class="msg-row"><div class="avatar">AURA</div><div class="bubble-text">New sandbox console initialized. Ready to generate responses.</div></div>`;
         }
 
+        // Processing Markdown code formatting blocks dynamically
+        function formatMarkdownText(rawText) {
+            // Regex to capture custom blocks of code
+            const codeBlockRegex = /```(?:html|css|javascript|js)?([\s\S]*?)```/g;
+            
+            return rawText.replace(codeBlockRegex, function(match, codeContent) {
+                // Escape simple brackets for inner view rendering
+                const escapedCode = codeContent.replace(/</g, "&lt;").replace(/>/g, "&gt;").trim();
+                // Create unique data payload identifier for rendering engine
+                const structuralData = btoa(unescape(encodeURIComponent(codeContent.trim())));
+                
+                return `<pre><code>${escapedCode}</code><button class="sandbox-inject-btn" onclick="runInSandbox('${structuralData}')">💻 Render Live</button></pre>`;
+            });
+        }
+
         function loadChatSession(id) {
             if (!chatSessions[id]) return;
             activeSessionId = id;
@@ -484,7 +638,8 @@
                 if(msg.role === "user") {
                     row.innerHTML = `<div class="avatar" style="color:#e3e3e3;">YOU</div><div class="bubble-text">${msg.text}${imgHTML}</div>`;
                 } else {
-                    row.innerHTML = `<div class="avatar">AURA</div><div class="bubble-text">${msg.text}</div>`;
+                    const parsedResponse = formatMarkdownText(msg.text);
+                    row.innerHTML = `<div class="avatar">AURA</div><div class="bubble-text">${parsedResponse}</div>`;
                 }
                 win.appendChild(row);
             });
@@ -506,7 +661,6 @@
             document.getElementById("file-input").click();
         }
 
-        /* 📸 HANDLING LOCAL RECOGNITION AND STORAGE OF IMAGES */
         function handleFileAttachment() {
             const fileBox = document.getElementById("file-input");
             if (fileBox.files.length === 0) return;
@@ -517,10 +671,8 @@
             const reader = new FileReader();
             reader.onload = function(e) {
                 const fullResult = e.target.result;
-                // Strip header info from Base64 string for Gemini API compatibility
                 attachedImageBase64 = fullResult.split(",")[1];
                 
-                // Show visual preview shelf
                 document.getElementById("img-display-preview").src = fullResult;
                 document.getElementById("preview-shelf").style.display = "block";
                 toggleSendBtn();
@@ -577,7 +729,35 @@
             document.getElementById("mic-button").classList.remove("listening");
         }
 
-        /* ➔ SEND MULTIMODAL API REQUEST */
+        /* 🖥️ ENGINE OVERRIDES FOR SANDBOX MOUNTING */
+        function toggleSandboxPanel() {
+            const panel = document.getElementById("sandbox-panel");
+            panel.classList.toggle("hidden");
+        }
+
+        function runInSandbox(encodedCode) {
+            // Unpack binary data layout string safely
+            const dynamicHTML = decodeURIComponent(escape(atob(encodedCode)));
+            const iframe = document.getElementById("sandbox-preview");
+            
+            // Pop canvas drawer open immediately upon rendering click
+            document.getElementById("sandbox-panel").classList.remove("hidden");
+            
+            const doc = iframe.contentDocument || iframe.contentWindow.document;
+            doc.open();
+            doc.write(dynamicHTML);
+            doc.close();
+        }
+
+        function clearSandbox() {
+            const iframe = document.getElementById("sandbox-preview");
+            const doc = iframe.contentDocument || iframe.contentWindow.document;
+            doc.open();
+            doc.write(`<html><body style="font-family:sans-serif; color:#666; display:flex; justify-content:center; align-items:center; height:90vh;"><div>No code active. Click "Render Live" inside a response block to boot structural preview.</div></body></html>`);
+            doc.close();
+        }
+
+        /* ➔ SEND INTERACTION CAPTURE */
         async function sendMessage() {
             const inputField = document.getElementById("user-input");
             const text = inputField.value.trim();
@@ -590,14 +770,12 @@
 
             const win = document.getElementById("chat-window");
 
-            // Display message on web interface
             const userRow = document.createElement("div");
             userRow.className = "msg-row";
             const inlineImgHTML = attachedImageBase64 ? `<br><img src="data:${attachedImageMimeType};base64,${attachedImageBase64}">` : "";
             userRow.innerHTML = `<div class="avatar" style="color:#e3e3e3;">YOU</div><div class="bubble-text">${text}${inlineImgHTML}</div>`;
             win.appendChild(userRow);
 
-            // Store history state
             chatSessions[activeSessionId].history.push({ 
                 role: "user", 
                 text: text,
@@ -609,8 +787,7 @@
                 chatSessions[activeSessionId].title = text ? text.substring(0, 22) + "..." : "Image Analysis Workspace";
             }
 
-            // Prep request payload variables
-            const currentMsgText = text || "Analyze this image layout.";
+            const currentMsgText = text || "Analyze this code or layout layout image.";
             const savedImageBase64 = attachedImageBase64;
             const savedImageMimeType = attachedImageMimeType;
 
@@ -625,7 +802,6 @@
             win.appendChild(aiRow);
             win.scrollTop = win.scrollHeight;
 
-            // Build request object structure matching standard Gemini API rules
             let requestParts = [{ text: currentMsgText }];
             if (savedImageBase64) {
                 requestParts.push({
@@ -646,12 +822,14 @@
                 const data = await res.json();
                 const outputText = data.candidates[0].content.parts[0].text;
                 
-                document.getElementById("loader").innerText = outputText;
-                document.getElementById("loader").removeAttribute("id");
+                // Track dynamic parsing changes
+                const loaderEl = document.getElementById("loader");
+                loaderEl.innerHTML = formatMarkdownText(outputText);
+                loaderEl.removeAttribute("id");
                 
                 chatSessions[activeSessionId].history.push({ role: "model", text: outputText });
             } catch (err) {
-                document.getElementById("loader").innerText = "Vision Integration API Connection Error.";
+                document.getElementById("loader").innerText = "Sandbox Engine API Connection Error.";
                 document.getElementById("loader").removeAttribute("id");
             }
             
