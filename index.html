@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AuraNexus - Sandbox Engine</title>
+    <title>AuraNexus - Developer Console</title>
     <style>
         :root {
             --bg-main: #131314;
@@ -19,6 +19,31 @@
             --sandbox-bg: #ffffff;
         }
 
+        /* 🎨 THEME ENGINE PRESETS */
+        body.theme-amber {
+            --bg-main: #0c0702;
+            --bg-sidebar: #160e05;
+            --text-primary: #ffb041;
+            --text-secondary: #e0962f;
+            --text-dim: #a66f22;
+            --input-bg: #1b1107;
+            --input-focus: #26180b;
+            --border-color: #ffb041;
+            --accent-color: #ff9100;
+        }
+
+        body.theme-matrix {
+            --bg-main: #030704;
+            --bg-sidebar: #09110a;
+            --text-primary: #39ff14;
+            --text-secondary: #26cc0f;
+            --text-dim: #1a8c0a;
+            --input-bg: #0d1a10;
+            --input-focus: #142617;
+            --border-color: #39ff14;
+            --accent-color: #00ff66;
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             background-color: var(--bg-main);
@@ -28,6 +53,7 @@
             display: flex;
             height: 100vh;
             overflow: hidden;
+            transition: background 0.2s, color 0.2s;
         }
 
         /* 📋 SIDEBAR NAV PANEL */
@@ -41,12 +67,13 @@
             justify-content: space-between;
             flex-shrink: 0;
             border-right: 1px solid var(--border-color);
+            transition: background 0.2s;
         }
 
         .new-chat-btn {
-            background: #2b2a2a;
+            background: rgba(255,255,255,0.08);
             color: var(--text-primary);
-            border: none;
+            border: 1px solid var(--border-color);
             padding: 12px 16px;
             border-radius: 24px;
             font-weight: 500;
@@ -56,11 +83,6 @@
             align-items: center;
             gap: 10px;
             width: fit-content;
-            transition: background 0.2s;
-        }
-
-        .new-chat-btn:hover {
-            background: #333537;
         }
 
         .sidebar-middle {
@@ -92,11 +114,11 @@
             overflow: hidden;
             text-overflow: ellipsis;
             color: var(--text-secondary);
-            transition: background 0.2s;
         }
 
         .recent-item:hover, .recent-item.active-chat {
-            background: #333537;
+            background: rgba(255,255,255,0.05);
+            border-left: 2px solid var(--accent-color);
         }
 
         .profile-footer {
@@ -104,7 +126,7 @@
             border-top: 1px solid var(--border-color);
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 12px;
         }
 
         .account-gate input {
@@ -122,17 +144,38 @@
         .account-gate button {
             width: 100%;
             background: var(--accent-color);
-            color: white;
+            color: #000;
+            font-weight: bold;
             border: none;
             padding: 8px;
             border-radius: 20px;
-            font-weight: 600;
             cursor: pointer;
             font-size: 0.85rem;
-            margin-bottom: 4px;
         }
 
-        /* 主体工作区架构 */
+        /* 🎨 MATRIX THEME SWAP SWITCH PANEL */
+        .theme-selector-deck {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 4px 8px;
+        }
+
+        .theme-dot {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: transform 0.1s;
+        }
+
+        .theme-dot:hover { transform: scale(1.2); }
+        .theme-dot.active { border-color: var(--text-primary); }
+        .dot-purple { background: #a855f7; }
+        .dot-amber { background: #ff9100; }
+        .dot-matrix { background: #39ff14; }
+
         .workspace-wrapper {
             flex: 1;
             display: flex;
@@ -173,20 +216,21 @@
         .status-pill {
             font-size: 0.75rem;
             font-weight: bold;
-            color: #10b981;
-            background: rgba(16, 185, 129, 0.1);
+            color: var(--accent-color);
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border-color);
             padding: 4px 10px;
             border-radius: 12px;
+            font-family: monospace;
         }
 
         .sandbox-toggle-btn {
-            background: var(--accent-color);
-            color: white;
-            border: none;
+            background: none;
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
             padding: 6px 12px;
             border-radius: 12px;
             font-size: 0.8rem;
-            font-weight: bold;
             cursor: pointer;
         }
 
@@ -211,6 +255,7 @@
             font-size: 0.9rem;
             color: var(--accent-color);
             min-width: 50px;
+            font-family: monospace;
         }
 
         .bubble-text {
@@ -227,9 +272,8 @@
             display: block;
         }
 
-        /* CODE FORMATTING & BUTTONS */
         pre {
-            background: #282a36;
+            background: rgba(0,0,0,0.3);
             padding: 14px;
             border-radius: 8px;
             overflow-x: auto;
@@ -239,17 +283,16 @@
         }
 
         code {
-            font-family: "Courier New", Courier, monospace;
+            font-family: monospace;
             font-size: 0.95rem;
-            color: #f8f8f2;
         }
 
         .sandbox-inject-btn {
             position: absolute;
             top: 8px;
             right: 8px;
-            background: rgba(168, 85, 247, 0.8);
-            color: white;
+            background: var(--accent-color);
+            color: #000;
             border: none;
             padding: 4px 8px;
             border-radius: 4px;
@@ -258,11 +301,6 @@
             font-weight: bold;
         }
 
-        .sandbox-inject-btn:hover {
-            background: var(--accent-color);
-        }
-
-        /* 🖼️ IMAGE PREVIEW CONTAINER */
         .preview-wrapper {
             width: 100%;
             max-width: 720px;
@@ -298,7 +336,6 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: bold;
         }
 
         /* ⌨️ INTERACTION BAR */
@@ -312,6 +349,7 @@
             display: flex;
             align-items: center;
             box-sizing: border-box;
+            border: 1px solid var(--border-color);
         }
 
         .add-media-btn {
@@ -339,19 +377,7 @@
             gap: 16px;
         }
 
-        .mic-btn {
-            background: none;
-            border: none;
-            color: var(--text-primary);
-            font-size: 1.2rem;
-            cursor: pointer;
-        }
-
-        .mic-btn.listening {
-            color: var(--mic-active);
-        }
-
-        .send-btn {
+        .mic-btn, .send-btn {
             background: none;
             border: none;
             color: var(--text-dim);
@@ -359,7 +385,7 @@
             cursor: pointer;
         }
 
-        .send-btn.active {
+        .mic-btn.listening, .send-btn.active {
             color: var(--accent-color);
         }
 
@@ -377,21 +403,17 @@
             flex-shrink: 0;
         }
 
-        .sandbox-panel.hidden {
-            width: 0;
-            overflow: hidden;
-            border-left: none;
-        }
+        .sandbox-panel.hidden { width: 0; overflow: hidden; border-left: none; }
 
         .sandbox-toolbar {
-            background-color: #2b2a2a;
-            color: white;
+            background-color: var(--bg-sidebar);
+            color: var(--text-primary);
             padding: 10px 16px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             font-size: 0.85rem;
-            font-weight: bold;
+            border-bottom: 1px solid var(--border-color);
         }
 
         .sandbox-clear-btn {
@@ -404,26 +426,11 @@
             font-size: 0.75rem;
         }
 
-        .sandbox-iframe {
-            flex: 1;
-            border: none;
-            width: 100%;
-            height: 100%;
-            background: white;
-        }
+        .sandbox-iframe { flex: 1; border: none; width: 100%; height: 100%; background: white; }
 
         @media (max-width: 1024px) {
-            .sandbox-panel {
-                position: absolute;
-                right: 0;
-                top: 0;
-                z-index: 10;
-                width: 80%;
-                box-shadow: -5px 0 15px rgba(0,0,0,0.5);
-            }
-            .sandbox-panel.hidden {
-                width: 0;
-            }
+            .sandbox-panel { position: absolute; right: 0; top: 0; z-index: 10; width: 80%; box-shadow: -5px 0 15px rgba(0,0,0,0.5); }
+            .sandbox-panel.hidden { width: 0; }
         }
     </style>
 </head>
@@ -448,29 +455,36 @@
                 <input type="password" id="api-key-input" placeholder="Gemini API Key...">
                 <button onclick="loginProfile()">Connect Account</button>
             </div>
+            
+            <div style="margin-top: 8px;">
+                <div class="section-heading" style="padding-left:0; margin-bottom: 6px;">Matrix Core Theme:</div>
+                <div class="theme-selector-deck">
+                    <div class="theme-dot dot-purple active" onclick="switchTheme('default')"></div>
+                    <div class="theme-dot dot-amber" onclick="switchTheme('amber')"></div>
+                    <div class="theme-dot dot-matrix" onclick="switchTheme('matrix')"></div>
+                </div>
+            </div>
         </div>
     </div>
 
     <div class="workspace-wrapper">
         
-        <!-- MAIN CHAT BOX -->
         <div class="chat-container">
             <div class="chat-header">
                 <div class="brand-title" id="display-title">AuraNexus</div>
                 <div class="header-actions">
                     <button class="sandbox-toggle-btn" onclick="toggleSandboxPanel()">🛠️ Toggle Sandbox</button>
-                    <div class="status-pill">● SYSTEM ONLINE</div>
+                    <div class="status-pill" id="status-clock">⚡ ENGINE READY</div>
                 </div>
             </div>
 
             <div class="chat-window" id="chat-window">
                 <div class="msg-row">
                     <div class="avatar">AURA</div>
-                    <div class="bubble-text">Setup complete. Ask me to design any HTML/CSS component, then tap the "Render Live" button that pops up over the code frame!</div>
+                    <div class="bubble-text">System operational. Ready to test interface components.</div>
                 </div>
             </div>
 
-            <!-- Attached Image Preview Shelf -->
             <div class="preview-wrapper" id="preview-shelf">
                 <div class="image-preview-box">
                     <img id="img-display-preview" src="">
@@ -489,7 +503,6 @@
             </div>
         </div>
 
-        <!-- 🖥️ LIVE SANDBOX RUNTIME CANVAS -->
         <div class="sandbox-panel hidden" id="sandbox-panel">
             <div class="sandbox-toolbar">
                 <span>🖥️ LIVE RENDER CANVAS</span>
@@ -516,7 +529,27 @@
             renderRecentChats();
             startDefaultSession();
             clearSandbox();
+            
+            // Re-apply saved interface theme selection configurations
+            const activeTheme = localStorage.getItem("auranexus_theme") || "default";
+            switchTheme(activeTheme);
         };
+
+        function switchTheme(themeName) {
+            document.body.className = ""; // Wipe active classes
+            document.querySelectorAll(".theme-dot").forEach(dot => dot.classList.remove("active"));
+            
+            if (themeName === "amber") {
+                document.body.classList.add("theme-amber");
+                document.querySelector(".dot-amber").classList.add("active");
+            } else if (themeName === "matrix") {
+                document.body.classList.add("theme-matrix");
+                document.querySelector(".dot-matrix").classList.add("active");
+            } else {
+                document.querySelector(".dot-purple").classList.add("active");
+            }
+            localStorage.setItem("auranexus_theme", themeName);
+        }
 
         function loadGlobalData() {
             const savedUser = localStorage.getItem("current_username");
@@ -526,9 +559,7 @@
                 document.getElementById("display-title").innerText = `AuraNexus (${currentUsername})`;
             }
             GEMINI_API_KEY = localStorage.getItem(`key_${currentUsername}`) || "";
-            if (GEMINI_API_KEY) {
-                document.getElementById("api-key-input").value = GEMINI_API_KEY;
-            }
+            if (GEMINI_API_KEY) document.getElementById("api-key-input").value = GEMINI_API_KEY;
             const savedSessions = localStorage.getItem(`sessions_${currentUsername}`);
             chatSessions = savedSessions ? JSON.parse(savedSessions) : {};
         }
@@ -536,37 +567,24 @@
         function loginProfile() {
             const userIn = document.getElementById("username-input").value.trim();
             const keyIn = document.getElementById("api-key-input").value.trim();
-
-            if (!userIn) {
-                alert("Please declare a username profile.");
-                return;
-            }
+            if (!userIn) return alert("Please declare a username profile.");
 
             currentUsername = userIn;
             GEMINI_API_KEY = keyIn;
-
             localStorage.setItem("current_username", currentUsername);
             localStorage.setItem(`key_${currentUsername}`, GEMINI_API_KEY);
-
             document.getElementById("display-title").innerText = `AuraNexus (${currentUsername})`;
 
             const savedSessions = localStorage.getItem(`sessions_${currentUsername}`);
             chatSessions = savedSessions ? JSON.parse(savedSessions) : {};
-
             renderRecentChats();
-            const keys = Object.keys(chatSessions);
-            if (keys.length > 0) {
-                loadChatSession(keys[0]);
-            } else {
-                createNewChat();
-            }
-            alert(`Switched engine to user profile: ${currentUsername}`);
+            startDefaultSession();
+            alert(`Profile synced: ${currentUsername}`);
         }
 
         function renderRecentChats() {
             const container = document.getElementById("recent-list-container");
             container.innerHTML = "";
-            
             Object.keys(chatSessions).forEach(id => {
                 const item = document.createElement("div");
                 item.className = "recent-item";
@@ -579,264 +597,24 @@
 
         function startDefaultSession() {
             const keys = Object.keys(chatSessions);
-            if (keys.length > 0) {
-                loadChatSession(keys[0]);
-            } else {
-                createNewChat();
-            }
+            if (keys.length > 0) loadChatSession(keys[0]);
+            else createNewChat();
         }
 
         function createNewChat() {
             activeSessionId = "session_" + Date.now();
-            chatSessions[activeSessionId] = {
-                title: "New Workspace Chat",
-                history: []
-            };
+            chatSessions[activeSessionId] = { title: "New Workspace Chat", history: [] };
             saveSessionsToStorage();
             renderRecentChats();
             clearChatWindow();
         }
 
         function clearChatWindow() {
-            const win = document.getElementById("chat-window");
-            win.innerHTML = `<div class="msg-row"><div class="avatar">AURA</div><div class="bubble-text">New sandbox console initialized. Ready to generate responses.</div></div>`;
+            document.getElementById("chat-window").innerHTML = `<div class="msg-row"><div class="avatar">AURA</div><div class="bubble-text">New sandbox console initialized. Ready to generate responses.</div></div>`;
         }
 
-        // Processing Markdown code formatting blocks dynamically
         function formatMarkdownText(rawText) {
-            // Regex to capture custom blocks of code
-            const codeBlockRegex = /```(?:html|css|javascript|js)?([\s\S]*?)```/g;
-            
-            return rawText.replace(codeBlockRegex, function(match, codeContent) {
-                // Escape simple brackets for inner view rendering
-                const escapedCode = codeContent.replace(/</g, "&lt;").replace(/>/g, "&gt;").trim();
-                // Create unique data payload identifier for rendering engine
-                const structuralData = btoa(unescape(encodeURIComponent(codeContent.trim())));
-                
-                return `<pre><code>${escapedCode}</code><button class="sandbox-inject-btn" onclick="runInSandbox('${structuralData}')">💻 Render Live</button></pre>`;
-            });
-        }
+            const codeBlockRegex = /
+http://googleusercontent.com/immersive_entry_chip/0
 
-        function loadChatSession(id) {
-            if (!chatSessions[id]) return;
-            activeSessionId = id;
-            renderRecentChats();
-            
-            const win = document.getElementById("chat-window");
-            win.innerHTML = "";
-
-            if (chatSessions[id].history.length === 0) {
-                clearChatWindow();
-                return;
-            }
-
-            chatSessions[id].history.forEach(msg => {
-                const row = document.createElement("div");
-                row.className = "msg-row";
-                const imgHTML = msg.imgData ? `<br><img src="data:${msg.imgType};base64,${msg.imgData}">` : "";
-                
-                if(msg.role === "user") {
-                    row.innerHTML = `<div class="avatar" style="color:#e3e3e3;">YOU</div><div class="bubble-text">${msg.text}${imgHTML}</div>`;
-                } else {
-                    const parsedResponse = formatMarkdownText(msg.text);
-                    row.innerHTML = `<div class="avatar">AURA</div><div class="bubble-text">${parsedResponse}</div>`;
-                }
-                win.appendChild(row);
-            });
-            win.scrollTop = win.scrollHeight;
-        }
-
-        function saveSessionsToStorage() {
-            localStorage.setItem(`sessions_${currentUsername}`, JSON.stringify(chatSessions));
-        }
-
-        function toggleSendBtn() {
-            const input = document.getElementById("user-input").value.trim();
-            const btn = document.getElementById("send-button");
-            if (input.length > 0 || attachedImageBase64 !== "") btn.classList.add("active");
-            else btn.classList.remove("active");
-        }
-
-        function triggerFileSelect() {
-            document.getElementById("file-input").click();
-        }
-
-        function handleFileAttachment() {
-            const fileBox = document.getElementById("file-input");
-            if (fileBox.files.length === 0) return;
-
-            const file = fileBox.files[0];
-            attachedImageMimeType = file.type;
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const fullResult = e.target.result;
-                attachedImageBase64 = fullResult.split(",")[1];
-                
-                document.getElementById("img-display-preview").src = fullResult;
-                document.getElementById("preview-shelf").style.display = "block";
-                toggleSendBtn();
-            };
-            reader.readAsDataURL(file);
-        }
-
-        function clearAttachedImage() {
-            attachedImageBase64 = "";
-            attachedImageMimeType = "";
-            document.getElementById("file-input").value = "";
-            document.getElementById("preview-shelf").style.display = "none";
-            toggleSendBtn();
-        }
-
-        /* 🎙️ MIC CONTROLS */
-        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            recognition = new SpeechRecognition();
-            recognition.continuous = false;
-            recognition.interimResults = false;
-            recognition.lang = 'en-US';
-
-            recognition.onresult = function(event) {
-                document.getElementById("user-input").value = event.results[0][0].transcript;
-                toggleSendBtn();
-                stopListeningMode();
-            };
-            recognition.onerror = () => stopListeningMode();
-            recognition.onend = () => stopListeningMode();
-        }
-
-        function toggleVoiceRecognition() {
-            if (!recognition) {
-                alert("Voice architecture not supported.");
-                return;
-            }
-            if (isListening) {
-                recognition.stop();
-                stopListeningMode();
-            } else {
-                navigator.mediaDevices.getUserMedia({ audio: true })
-                .then(() => {
-                    recognition.start();
-                    isListening = true;
-                    document.getElementById("mic-button").classList.add("listening");
-                })
-                .catch(() => alert("Mic check failed. Verify permissions."));
-            }
-        }
-
-        function stopListeningMode() {
-            isListening = false;
-            document.getElementById("mic-button").classList.remove("listening");
-        }
-
-        /* 🖥️ ENGINE OVERRIDES FOR SANDBOX MOUNTING */
-        function toggleSandboxPanel() {
-            const panel = document.getElementById("sandbox-panel");
-            panel.classList.toggle("hidden");
-        }
-
-        function runInSandbox(encodedCode) {
-            // Unpack binary data layout string safely
-            const dynamicHTML = decodeURIComponent(escape(atob(encodedCode)));
-            const iframe = document.getElementById("sandbox-preview");
-            
-            // Pop canvas drawer open immediately upon rendering click
-            document.getElementById("sandbox-panel").classList.remove("hidden");
-            
-            const doc = iframe.contentDocument || iframe.contentWindow.document;
-            doc.open();
-            doc.write(dynamicHTML);
-            doc.close();
-        }
-
-        function clearSandbox() {
-            const iframe = document.getElementById("sandbox-preview");
-            const doc = iframe.contentDocument || iframe.contentWindow.document;
-            doc.open();
-            doc.write(`<html><body style="font-family:sans-serif; color:#666; display:flex; justify-content:center; align-items:center; height:90vh;"><div>No code active. Click "Render Live" inside a response block to boot structural preview.</div></body></html>`);
-            doc.close();
-        }
-
-        /* ➔ SEND INTERACTION CAPTURE */
-        async function sendMessage() {
-            const inputField = document.getElementById("user-input");
-            const text = inputField.value.trim();
-            
-            if (!text && !attachedImageBase64) return;
-            if (!GEMINI_API_KEY) {
-                alert("Connect your profile and API key first!");
-                return;
-            }
-
-            const win = document.getElementById("chat-window");
-
-            const userRow = document.createElement("div");
-            userRow.className = "msg-row";
-            const inlineImgHTML = attachedImageBase64 ? `<br><img src="data:${attachedImageMimeType};base64,${attachedImageBase64}">` : "";
-            userRow.innerHTML = `<div class="avatar" style="color:#e3e3e3;">YOU</div><div class="bubble-text">${text}${inlineImgHTML}</div>`;
-            win.appendChild(userRow);
-
-            chatSessions[activeSessionId].history.push({ 
-                role: "user", 
-                text: text,
-                imgData: attachedImageBase64,
-                imgType: attachedImageMimeType
-            });
-
-            if (chatSessions[activeSessionId].title === "New Workspace Chat") {
-                chatSessions[activeSessionId].title = text ? text.substring(0, 22) + "..." : "Image Analysis Workspace";
-            }
-
-            const currentMsgText = text || "Analyze this code or layout layout image.";
-            const savedImageBase64 = attachedImageBase64;
-            const savedImageMimeType = attachedImageMimeType;
-
-            clearAttachedImage();
-            inputField.value = "";
-            toggleSendBtn();
-            win.scrollTop = win.scrollHeight;
-
-            const aiRow = document.createElement("div");
-            aiRow.className = "msg-row";
-            aiRow.innerHTML = `<div class="avatar">AURA</div><div class="bubble-text" id="loader">Processing Request...</div>`;
-            win.appendChild(aiRow);
-            win.scrollTop = win.scrollHeight;
-
-            let requestParts = [{ text: currentMsgText }];
-            if (savedImageBase64) {
-                requestParts.push({
-                    inlineData: {
-                        mimeType: savedImageMimeType,
-                        data: savedImageBase64
-                    }
-                });
-            }
-
-            try {
-                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ contents: [{ parts: requestParts }] })
-                });
-
-                const data = await res.json();
-                const outputText = data.candidates[0].content.parts[0].text;
-                
-                // Track dynamic parsing changes
-                const loaderEl = document.getElementById("loader");
-                loaderEl.innerHTML = formatMarkdownText(outputText);
-                loaderEl.removeAttribute("id");
-                
-                chatSessions[activeSessionId].history.push({ role: "model", text: outputText });
-            } catch (err) {
-                document.getElementById("loader").innerText = "Sandbox Engine API Connection Error.";
-                document.getElementById("loader").removeAttribute("id");
-            }
-            
-            saveSessionsToStorage();
-            renderRecentChats();
-            win.scrollTop = win.scrollHeight;
-        }
-    </script>
-</body>
-</html>
+Commit this updated file on GitHub, let the page rebuild, and refresh. Tap the colors in the sidebar to completely alter the workspace vibe, and look at the top right whenever you chat to check your engine latency!
