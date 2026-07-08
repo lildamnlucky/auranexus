@@ -19,7 +19,7 @@
             --sandbox-bg: #ffffff;
         }
 
-        /* 🎨 MATRIX THEME PRESETS */
+        /* 🎨 THEME PRESETS */
         body.theme-amber {
             --bg-main: #0c0702;
             --bg-sidebar: #160e05;
@@ -121,6 +121,39 @@
             border-left: 2px solid var(--accent-color);
         }
 
+        /* 🎮 RPG LEVEL / XP SYSTEMS CARD DESIGN */
+        .xp-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 4px;
+        }
+
+        .xp-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+
+        .xp-bar-container {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .xp-bar-fill {
+            height: 100%;
+            background: var(--accent-color);
+            width: 0%;
+            transition: width 0.4s ease;
+            box-shadow: 0 0 8px var(--accent-color);
+        }
+
         .profile-footer {
             padding-top: 12px;
             border-top: 1px solid var(--border-color);
@@ -153,7 +186,7 @@
             font-size: 0.85rem;
         }
 
-        /* 🎨 MATRIX THEME SWAP SWITCH PANEL */
+        /* 🎨 SWITCH THEME SWITCH PANEL */
         .theme-selector-deck {
             display: flex;
             align-items: center;
@@ -272,7 +305,6 @@
             display: block;
         }
 
-        /* */
         pre {
             background: rgba(0,0,0,0.3);
             padding: 14px;
@@ -322,42 +354,7 @@
             transform: scale(1.05);
         }
 
-        /* 💡 QUICK PROMPTS CHIPS ROW */
-        .quick-prompts-deck {
-            width: 100%;
-            max-width: 720px;
-            margin: 0 auto 10px auto;
-            display: flex;
-            gap: 8px;
-            overflow-x: auto;
-            padding: 4px 8px;
-            box-sizing: border-box;
-            scrollbar-width: none;
-        }
-
-        .quick-prompts-deck::-webkit-scrollbar {
-            display: none;
-        }
-
-        .prompt-chip {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--border-color);
-            color: var(--text-secondary);
-            padding: 6px 14px;
-            border-radius: 16px;
-            font-size: 0.8rem;
-            white-space: nowrap;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .prompt-chip:hover {
-            background: rgba(255, 255, 255, 0.1);
-            border-color: var(--accent-color);
-            color: var(--text-primary);
-        }
-
-        /* 🔊 AUDIO MESSAGE ACTION ROW */
+        /* 🔊 AUDIO ACTIONS LAYOUT */
         .msg-actions {
             margin-top: 8px;
             display: flex;
@@ -510,7 +507,7 @@
 
         .sandbox-iframe { flex: 1; border: none; width: 100%; height: 100%; background: white; }
 
-        /* 🔔 CUSTOM NON-BLOCKING TOAST NOTIFICATION STYLING */
+        /* 🔔 CUSTOM NON-BLOCKING TOAST NOTIFICATION */
         .toast-banner {
             position: fixed;
             top: 20px;
@@ -555,7 +552,7 @@
 </head>
 <body>
 
-    <!-- 🔔 FLOATING TOAST NOTIFICATION SYSTEM (No more annoying browser alerts!) -->
+    <!-- 🔔 FLOATING TOAST NOTIFICATION SYSTEM -->
     <div id="toast" class="toast-banner">
         <span class="toast-accent">AuraNexus:</span> <span id="toast-message">Notification loaded successfully.</span>
     </div>
@@ -573,6 +570,18 @@
         </div>
 
         <div class="profile-footer">
+            
+            <!-- 🎮 RPG LEVEL & XP SYSTEMS PROFILE CARD -->
+            <div class="xp-card">
+                <div class="xp-header">
+                    <span id="xp-rank" style="color: var(--accent-color);">Lvl 1: Novice Prompter</span>
+                    <span id="xp-value" style="color: var(--text-dim);">0 / 100 XP</span>
+                </div>
+                <div class="xp-bar-container">
+                    <div id="xp-bar" class="xp-bar-fill"></div>
+                </div>
+            </div>
+
             <div class="account-gate">
                 <div class="section-heading" style="padding-left:0;">User Engine Config:</div>
                 <input type="text" id="username-input" placeholder="Profile Username...">
@@ -580,7 +589,7 @@
                 <button onclick="loginProfile()">Connect Account</button>
             </div>
             
-            <!-- THEME SWITCHER CONTAINER -->
+            <!-- THEME SWITCHER -->
             <div style="margin-top: 8px;">
                 <div class="section-heading" style="padding-left:0; margin-bottom: 6px;">Matrix Core Theme:</div>
                 <div class="theme-selector-deck">
@@ -617,14 +626,6 @@
                 </div>
             </div>
 
-            <!-- QUICK PROMPTS SHORTCUT ROW -->
-            <div class="quick-prompts-deck" id="quick-prompts-deck">
-                <button class="prompt-chip" onclick="applyQuickPrompt('snake')">🎮 Play Snake</button>
-                <button class="prompt-chip" onclick="applyQuickPrompt('clock')">⏱️ Glowing Clock</button>
-                <button class="prompt-chip" onclick="applyQuickPrompt('card')">🃏 Glass Card</button>
-                <button class="prompt-chip" onclick="applyQuickPrompt('button')">✨ Bouncy Buttons</button>
-            </div>
-
             <div class="input-wrapper">
                 <button class="add-media-btn" onclick="triggerFileSelect()">＋</button>
                 <input type="file" id="file-input" accept="image/*" onchange="handleFileAttachment()">
@@ -659,6 +660,10 @@
 
         let currentUtterance = null;
 
+        // RPG Leveling Stats
+        let userXP = 0;
+        let userLevel = 1;
+
         window.onload = function() {
             loadGlobalData();
             renderRecentChats();
@@ -669,7 +674,7 @@
             switchTheme(activeTheme);
         };
 
-        /* 🔔 CUSTOM INLINE NOTIFICATION BAR TRIGGER */
+        /* 🔔 CUSTOM INLINE TOAST NOTIFICATION TRIGGER */
         function triggerToast(message) {
             const toast = document.getElementById("toast");
             const toastMsg = document.getElementById("toast-message");
@@ -696,7 +701,6 @@
             localStorage.setItem("auranexus_theme", themeName);
         }
 
-        /* */
         function loadGlobalData() {
             try {
                 const savedUser = localStorage.getItem("current_username");
@@ -710,9 +714,57 @@
                 
                 const savedSessions = localStorage.getItem(`sessions_${currentUsername}`);
                 chatSessions = savedSessions ? JSON.parse(savedSessions) : {};
+
+                // Load RPG leveling records
+                userXP = parseInt(localStorage.getItem(`xp_${currentUsername}`)) || 0;
+                userLevel = parseInt(localStorage.getItem(`level_${currentUsername}`)) || 1;
+                updateXPDisplay();
             } catch (err) {
-                console.error("Local Storage reset due to parser variance.", err);
+                console.error("Local Storage sync recovery.", err);
                 chatSessions = {};
+            }
+        }
+
+        function getLevelTitle(level) {
+            const titles = [
+                "Novice Prompter",
+                "Script Initiate",
+                "Byte Weaver",
+                "Layout Squire",
+                "Code Cyber-Ninja",
+                "Terminal Architect"
+            ];
+            return titles[Math.min(level - 1, titles.length - 1)];
+        }
+
+        function updateXPDisplay() {
+            const nextLevelXP = userLevel * 100;
+            document.getElementById("xp-rank").innerText = `Lvl ${userLevel}: ${getLevelTitle(userLevel)}`;
+            document.getElementById("xp-value").innerText = `${userXP} / ${nextLevelXP} XP`;
+            const percentage = Math.min((userXP / nextLevelXP) * 100, 100);
+            document.getElementById("xp-bar").style.width = `${percentage}%`;
+        }
+
+        function addXP(amount) {
+            userXP += amount;
+            let nextLevelXP = userLevel * 100;
+            let leveledUp = false;
+            
+            while (userXP >= nextLevelXP) {
+                userXP -= nextLevelXP;
+                userLevel++;
+                nextLevelXP = userLevel * 100;
+                leveledUp = true;
+            }
+            
+            localStorage.setItem(`xp_${currentUsername}`, userXP);
+            localStorage.setItem(`level_${currentUsername}`, userLevel);
+            updateXPDisplay();
+
+            if (leveledUp) {
+                triggerToast(`🎉 LEVEL UP! You are now a Lvl ${userLevel} ${getLevelTitle(userLevel)}!`);
+            } else {
+                triggerToast(`✨ Gained +${amount} XP!`);
             }
         }
 
@@ -721,7 +773,7 @@
             const keyIn = document.getElementById("api-key-input").value.trim();
             
             if (!userIn) {
-                triggerToast("Please type in a Username profile first!");
+                triggerToast("Please input a valid username.");
                 return;
             }
 
@@ -734,13 +786,18 @@
             try {
                 const savedSessions = localStorage.getItem(`sessions_${currentUsername}`);
                 chatSessions = savedSessions ? JSON.parse(savedSessions) : {};
+                
+                // Switch stats profile
+                userXP = parseInt(localStorage.getItem(`xp_${currentUsername}`)) || 0;
+                userLevel = parseInt(localStorage.getItem(`level_${currentUsername}`)) || 1;
+                updateXPDisplay();
             } catch(e) {
                 chatSessions = {};
             }
 
             renderRecentChats();
             startDefaultSession();
-            triggerToast(`Profile Synced: ${currentUsername}`);
+            triggerToast(`Profile Synchronized: ${currentUsername}`);
         }
 
         function renderRecentChats() {
@@ -774,7 +831,6 @@
             document.getElementById("chat-window").innerHTML = `<div class="msg-row"><div class="avatar">AURA</div><div class="bubble-text">New sandbox console initialized. Ready to generate responses.</div></div>`;
         }
 
-        /* 💻 DYNAMIC MARKDOWN PARSER WITH ACTIONS WRAPPER */
         function formatMarkdownText(rawText) {
             const codeBlockRegex = /```(?:html|css|javascript|js)?([\s\S]*?)```/g;
             return rawText.replace(codeBlockRegex, function(match, codeContent) {
@@ -784,7 +840,6 @@
             });
         }
 
-        /* 📋 DIRECT TABLET COPY UTILITY FALLBACK */
         function copyToClipboard(encodedCode) {
             const dynamicHTML = decodeURIComponent(escape(atob(encodedCode)));
             const textarea = document.createElement("textarea");
@@ -801,17 +856,15 @@
             document.body.removeChild(textarea);
         }
 
-        /* 🔊 TEXT TO SPEECH DICTATION LAYER */
         function speakMessage(btnId, rawText) {
             if (window.speechSynthesis.speaking) {
                 window.speechSynthesis.cancel();
                 if (currentUtterance && currentUtterance.btnId === btnId) {
                     currentUtterance = null;
-                    return; // Toggle stop speech
+                    return;
                 }
             }
 
-            // Stripping markdown blocks out of audio reading stream
             const cleanSpokenText = rawText.replace(/```[\s\S]*?```/g, "[Skipping code block]").replace(/<[^>]*>/g, "");
             
             const utterance = new SpeechSynthesisUtterance(cleanSpokenText);
@@ -819,27 +872,10 @@
             currentUtterance = utterance;
 
             const voices = window.speechSynthesis.getVoices();
-            // Choose modern clean audio voice profile if present
             const preferredVoice = voices.find(v => v.name.includes("Google US English") || v.name.includes("Natural"));
             if (preferredVoice) utterance.voice = preferredVoice;
 
             window.speechSynthesis.speak(utterance);
-        }
-
-        /* 💡 AUTOMATED PROMPT CHIP INJECTOR */
-        function applyQuickPrompt(type) {
-            const inputField = document.getElementById("user-input");
-            if (type === 'snake') {
-                inputField.value = "Create a classic fully playable Snake Game inside an HTML canvas element. Make it responsive with colorful arcade styling.";
-            } else if (type === 'clock') {
-                inputField.value = "Create a modern sci-fi dark style digital clock layout with glowing purple text and smooth loading transition animations.";
-            } else if (type === 'card') {
-                inputField.value = "Design a beautiful modern glassmorphic profile card using translucent blurred panels and dynamic grid shadow layouts.";
-            } else if (type === 'button') {
-                inputField.value = "Create three buttons featuring intense fluid interactive micro-interactions: infinite hover glow pulse, bouncy active scale spring, and rolling color fill.";
-            }
-            toggleSendBtn();
-            inputField.focus();
         }
 
         function loadChatSession(id) {
@@ -857,7 +893,7 @@
                 if(msg.role === "user") {
                     row.innerHTML = `<div class="avatar" style="color:var(--text-primary);">YOU</div><div class="bubble-text">${msg.text}${imgHTML}</div>`;
                 } else {
-                    const cleanText = msg.text.replace(/['"`]/g, '\\$&'); // Escaped quotes safety
+                    const cleanText = msg.text.replace(/['"`]/g, '\\$&');
                     const speechId = `speech_${id}_${index}`;
                     row.innerHTML = `
                         <div class="avatar">AURA</div>
@@ -911,7 +947,6 @@
             toggleSendBtn();
         }
 
-        /* */
         if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             recognition = new SpeechRecognition();
@@ -929,7 +964,7 @@
 
         function toggleVoiceRecognition() {
             if (!recognition) {
-                triggerToast("Voice recognition is not supported on this browser version.");
+                triggerToast("Voice recognition is unsupported on this browser.");
                 return;
             }
             if (isListening) { recognition.stop(); stopListeningMode(); }
@@ -946,6 +981,7 @@
         function stopListeningMode() { isListening = false; document.getElementById("mic-button").classList.remove("listening"); }
 
         function toggleSandboxPanel() { document.getElementById("sandbox-panel").classList.toggle("hidden"); }
+        
         function runInSandbox(encodedCode) {
             const dynamicHTML = decodeURIComponent(escape(atob(encodedCode)));
             const iframe = document.getElementById("sandbox-preview");
@@ -953,6 +989,7 @@
             const doc = iframe.contentDocument || iframe.contentWindow.document;
             doc.open(); doc.write(dynamicHTML); doc.close();
         }
+
         function clearSandbox() {
             const iframe = document.getElementById("sandbox-preview");
             const doc = iframe.contentDocument || iframe.contentWindow.document;
@@ -961,7 +998,6 @@
             doc.close();
         }
 
-        /* ➔ SEND & API LOGGING PROCESSORS */
         async function sendMessage() {
             const inputField = document.getElementById("user-input");
             const text = inputField.value.trim();
@@ -1003,6 +1039,10 @@
             win.appendChild(aiRow);
             win.scrollTop = win.scrollHeight;
 
+            // Timer Capture
+            const startTime = performance.now();
+            document.getElementById("status-clock").innerText = "⏳ COMPUTING...";
+
             try {
                 const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
                     method: "POST",
@@ -1013,14 +1053,31 @@
                 const data = await res.json();
                 const outputText = data.candidates[0].content.parts[0].text;
                 
+                // End Speed Calculation
+                const endTime = performance.now();
+                const latency = Math.round(endTime - startTime);
+                document.getElementById("status-clock").innerText = `⚡ ENGINE READY (${latency}ms)`;
+
                 const loaderEl = document.getElementById("loader");
-                loaderEl.innerHTML = formatMarkdownText(outputText);
+                const currentMsgIndex = chatSessions[activeSessionId].history.length;
+                const escapedOutputText = outputText.replace(/['"`]/g, '\\$&');
+                const speechId = `speech_${activeSessionId}_${currentMsgIndex}`;
+                
+                loaderEl.innerHTML = `
+                    ${formatMarkdownText(outputText)}
+                    <div class="msg-actions">
+                        <button class="action-icon-btn" onclick="speakMessage('${speechId}', \`${escapedOutputText}\`)">🔊 Listen</button>
+                    </div>`;
                 loaderEl.removeAttribute("id");
                 
                 chatSessions[activeSessionId].history.push({ role: "model", text: outputText });
+
+                // Add random XP points to level progress stats
+                addXP(Math.floor(Math.random() * 15) + 15);
             } catch (err) {
                 document.getElementById("loader").innerText = "Core processor connection issue. Verify your active API key entry.";
                 document.getElementById("loader").removeAttribute("id");
+                document.getElementById("status-clock").innerText = "❌ ENGINE ERROR";
             }
             
             saveSessionsToStorage();
@@ -1030,4 +1087,3 @@
     </script>
 </body>
 </html>
-`
