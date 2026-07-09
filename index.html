@@ -1145,11 +1145,15 @@
             document.body.removeChild(textarea);
         }
 
-        function speakMessage(btnId, rawText) {
+        function speakMessage(sessionId, msgIndex) {
+            const session = chatSessions[sessionId];
+            if (!session || !session.history[msgIndex]) return;
+            const rawText = session.history[msgIndex].text;
+
             if (window.speechSynthesis.speaking) {
                 window.speechSynthesis.cancel();
                 visualizerState = "idle";
-                if (currentUtterance && currentUtterance.btnId === btnId) {
+                if (currentUtterance && currentUtterance.sessionId === sessionId && currentUtterance.msgIndex === msgIndex) {
                     currentUtterance = null;
                     return;
                 }
@@ -1158,12 +1162,13 @@
             const cleanSpokenText = rawText.replace(/```[\s\S]*?```/g, "[Skipping code block]").replace(/<[^>]*>/g, "");
             
             const utterance = new SpeechSynthesisUtterance(cleanSpokenText);
-            utterance.btnId = btnId;
+            utterance.sessionId = sessionId;
+            utterance.msgIndex = msgIndex;
             currentUtterance = utterance;
 
             utterance.onstart = () => { visualizerState = "speaking"; };
-            utterance.onend = () => { visualizerState = "idle"; };
-            utterance.onerror = () => { visualizerState = "idle"; };
+            utterance.onend = () => { visualizerState = "idle"; currentUtterance = null; };
+            utterance.onerror = () => { visualizerState = "idle"; currentUtterance = null; };
 
             const voices = window.speechSynthesis.getVoices();
             const preferredVoice = voices.find(v => v.name.includes("Google US English") || v.name.includes("Natural"));
@@ -1187,14 +1192,12 @@
                 if(msg.role === "user") {
                     row.innerHTML = `<div class="avatar" style="color:var(--text-primary);">YOU</div><div class="bubble-text">${msg.text}${imgHTML}</div>`;
                 } else {
-                    const cleanText = msg.text.replace(/['"`]/g, '\\$&');
-                    const speechId = `speech_${id}_${index}`;
                     row.innerHTML = `
                         <div class="avatar">SYSTEM</div>
                         <div class="bubble-text">
                             ${formatMarkdownText(msg.text)}
                             <div class="msg-actions">
-                                <button class="action-icon-btn" onclick="speakMessage('${speechId}', \`${cleanText}\`)">🔊 Listen</button>
+                                <button class="action-icon-btn" onclick="speakMessage('${id}', ${index})">🔊 Listen</button>
                             </div>
                         </div>`;
                 }
@@ -1361,19 +1364,17 @@
                 document.getElementById("status-clock").innerText = `⚡ ENGINE READY (${latency}ms)`;
                 visualizerState = "idle";
 
+                // Save model message first to secure the index reference
+                chatSessions[activeSessionId].history.push({ role: "model", text: outputText });
+                const currentMsgIndex = chatSessions[activeSessionId].history.length - 1;
+
                 const loaderEl = document.getElementById("loader");
-                const currentMsgIndex = chatSessions[activeSessionId].history.length;
-                const escapedOutputText = outputText.replace(/['"`]/g, '\\$&');
-                const speechId = `speech_${activeSessionId}_${currentMsgIndex}`;
-                
                 loaderEl.innerHTML = `
                     ${formatMarkdownText(outputText)}
                     <div class="msg-actions">
-                        <button class="action-icon-btn" onclick="speakMessage('${speechId}', \`${escapedOutputText}\`)">🔊 Listen</button>
+                        <button class="action-icon-btn" onclick="speakMessage('${activeSessionId}', ${currentMsgIndex})">🔊 Listen</button>
                     </div>`;
                 loaderEl.removeAttribute("id");
-                
-                chatSessions[activeSessionId].history.push({ role: "model", text: outputText });
 
                 addXP(Math.floor(Math.random() * 15) + 15);
             } catch (err) {
