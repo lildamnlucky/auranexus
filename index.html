@@ -19,6 +19,12 @@
       --danger: #ff4b4b;
     }
 
+    /* Color Themes */
+    body.theme-cyan { --accent: #00f0ff; --accent-purple: #7000ff; }
+    body.theme-green { --accent: #00ff66; --accent-purple: #008833; }
+    body.theme-gold { --accent: #ffcc00; --accent-purple: #ff6600; }
+    body.theme-pink { --accent: #ff007f; --accent-purple: #99004d; }
+
     * {
       box-sizing: border-box;
       margin: 0;
@@ -33,6 +39,7 @@
       overflow: hidden;
       display: flex;
       flex-direction: column;
+      touch-action: none;
     }
 
     /* 3D Canvas Background */
@@ -43,7 +50,6 @@
       width: 100vw;
       height: 100vh;
       z-index: 1;
-      pointer-events: none;
     }
 
     /* Main Console Layout */
@@ -54,15 +60,9 @@
       justify-content: space-between;
       align-items: center;
       padding: 12px 20px;
-      background: rgba(11, 14, 20, 0.8);
+      background: rgba(11, 14, 20, 0.85);
       backdrop-filter: blur(10px);
       border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 10px;
     }
 
     .brand h1 {
@@ -75,7 +75,7 @@
 
     /* Holographic Wave HUD */
     .hud-wave-box {
-      width: 120px;
+      width: 100px;
       height: 30px;
       display: flex;
       align-items: center;
@@ -89,14 +89,26 @@
 
     .nav-actions {
       display: flex;
-      gap: 10px;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .theme-select {
+      background: var(--card-bg);
+      color: var(--text);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      padding: 6px 10px;
+      border-radius: 8px;
+      outline: none;
+      font-size: 0.8rem;
+      cursor: pointer;
     }
 
     .btn {
       background: var(--card-bg);
       color: var(--text);
       border: 1px solid rgba(255, 255, 255, 0.15);
-      padding: 8px 14px;
+      padding: 8px 12px;
       border-radius: 8px;
       cursor: pointer;
       font-size: 0.85rem;
@@ -111,13 +123,7 @@
       box-shadow: 0 0 10px rgba(0, 240, 255, 0.3);
     }
 
-    .btn-danger {
-      background: rgba(255, 75, 75, 0.2);
-      border-color: var(--danger);
-      color: #ff8888;
-    }
-
-    /* Main Work Area split screen setup */
+    /* Main Work Area */
     .main-container {
       position: relative;
       z-index: 10;
@@ -152,6 +158,7 @@
       font-size: 0.95rem;
       position: relative;
       animation: fadeIn 0.3s ease;
+      white-space: pre-wrap;
     }
 
     @keyframes fadeIn {
@@ -195,11 +202,17 @@
       color: var(--accent);
     }
 
-    /* Chat Input Bar */
-    .chat-input-container {
-      padding: 14px 20px;
+    /* Input & Virtual Keyboard Bar */
+    .chat-input-wrapper {
+      padding: 10px 16px;
       background: rgba(11, 14, 20, 0.9);
       border-top: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .chat-input-container {
       display: flex;
       gap: 10px;
       align-items: center;
@@ -221,7 +234,36 @@
       box-shadow: 0 0 8px rgba(0, 240, 255, 0.2);
     }
 
-    /* Sandbox Drawer (Split-Screen) */
+    /* Virtual Keyboard Controls */
+    .virtual-keyboard {
+      display: none;
+      gap: 6px;
+      flex-wrap: wrap;
+      justify-content: center;
+      padding-top: 6px;
+    }
+
+    .virtual-keyboard.active {
+      display: flex;
+    }
+
+    .key-btn {
+      background: var(--card-bg);
+      color: var(--text);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .key-btn:active {
+      background: var(--accent);
+      color: #000;
+    }
+
+    /* Sandbox Drawer */
     .sandbox-drawer {
       width: 0%;
       height: 100%;
@@ -246,7 +288,6 @@
       }
     }
 
-    /* Floating Close Button for Mobile Fix */
     .sandbox-close-fab {
       position: absolute;
       top: 14px;
@@ -274,23 +315,32 @@
     }
   </style>
 </head>
-<body>
+<body class="theme-cyan">
 
-  <!-- Three.js Visual Canvas Container -->
+  <!-- Interactive 3D Stars Canvas Container -->
   <div id="canvas-container"></div>
 
-  <!-- Header -->
+  <!-- Header Header -->
   <header class="app-header">
     <div class="brand">
       <h1>AURA NEXUS</h1>
     </div>
 
-    <!-- Dynamic Audio Spectrum HUD -->
+    <!-- HUD Audio Waveform -->
     <div class="hud-wave-box">
       <canvas id="hudCanvas"></canvas>
     </div>
 
     <div class="nav-actions">
+      <!-- Theme Switcher Color Selector -->
+      <select class="theme-select" onchange="changeTheme(this.value)">
+        <option value="theme-cyan">Cyan</option>
+        <option value="theme-green">Green</option>
+        <option value="theme-gold">Gold</option>
+        <option value="theme-pink">Pink</option>
+      </select>
+
+      <button class="btn" onclick="toggleVirtualKeyboard()" id="kbdToggleBtn">⌨️ Keypad</button>
       <button class="btn" onclick="toggleVoiceListen()" id="micBtn">🎙️ Speak</button>
       <button class="btn" onclick="toggleSandbox()" id="sandboxToggleBtn">⚡ Sandbox</button>
     </div>
@@ -302,25 +352,34 @@
     <section class="chat-section">
       <div class="chat-messages" id="chatMessages">
         <div class="message aura">
-          Hello Nyamekye and Kirk! Aura is online and ready. How can I help you build today?
+          Hello! Aura is online with active AI processing. Ask me anything!
         </div>
       </div>
 
-      <div class="chat-input-container">
-        <input 
-          type="text" 
-          id="userInput" 
-          class="chat-input" 
-          placeholder="Type a message or code command..." 
-          onkeydown="handleKeyDown(event)"
-        />
-        <button class="btn" onclick="sendMessage()">Send</button>
+      <div class="chat-input-wrapper">
+        <div class="chat-input-container">
+          <input 
+            type="text" 
+            id="userInput" 
+            class="chat-input" 
+            placeholder="Ask Aura a question..." 
+            onkeydown="handleKeyDown(event)"
+          />
+          <button class="btn" id="sendBtn" onclick="sendMessage()">Send</button>
+        </div>
+
+        <!-- On-screen Quick Keyboard -->
+        <div class="virtual-keyboard" id="virtualKeyboard">
+          <button class="key-btn" onclick="typeQuickKey('What can you do?')">What can you do?</button>
+          <button class="key-btn" onclick="typeQuickKey('Tell me a cool space fact!')">Space Fact</button>
+          <button class="key-btn" onclick="typeQuickKey('Write a short HTML button')">HTML Code</button>
+          <button class="key-btn" onclick="typeQuickKey('Clear')">Clear</button>
+        </div>
       </div>
     </section>
 
     <!-- Interactive Sandbox Drawer -->
     <aside id="sandbox-container" class="sandbox-drawer">
-      <!-- Easy Floating Close Button Fix for Android & Mobile Screens -->
       <button id="close-sandbox-btn" onclick="toggleSandbox()" class="sandbox-close-fab">
         ✕ Close Preview
       </button>
@@ -331,10 +390,38 @@
 
   <script>
     /* =========================================================
-       1. CHAT & MESSAGE INDEX MEMORY
+       1. THEME SWITCHER
+       ========================================================= */
+    function changeTheme(themeName) {
+      document.body.className = themeName;
+      playKeyClickSound();
+      updateStarColor();
+    }
+
+    /* =========================================================
+       2. VIRTUAL KEYBOARD TOGGLE
+       ========================================================= */
+    function toggleVirtualKeyboard() {
+      const kbd = document.getElementById('virtualKeyboard');
+      kbd.classList.toggle('active');
+      playKeyClickSound();
+    }
+
+    function typeQuickKey(text) {
+      const input = document.getElementById('userInput');
+      if (text === 'Clear') {
+        input.value = '';
+      } else {
+        input.value = text;
+      }
+      playKeyClickSound();
+    }
+
+    /* =========================================================
+       3. LIVE AI CHAT ENGINE INTEGRATION
        ========================================================= */
     let messageHistory = [
-      { sender: 'aura', text: "Hello Nyamekye and Kirk! Aura is online and ready. How can I help you build today?" }
+      { sender: 'aura', text: "Hello! Aura is online with active AI processing. Ask me anything!" }
     ];
 
     function renderMessages() {
@@ -347,7 +434,6 @@
         
         let htmlContent = `<div>${escapeHtml(msg.text)}</div>`;
 
-        // Add TTS Speak action button to Aura's messages by Memory Index
         if (msg.sender === 'aura') {
           htmlContent += `
             <div class="message-actions">
@@ -365,31 +451,39 @@
       chatBox.scrollTop = chatBox.scrollHeight;
     }
 
-    function sendMessage() {
+    async function sendMessage() {
       const input = document.getElementById('userInput');
       const text = input.value.trim();
       if (!text) return;
 
       playKeyClickSound();
 
-      // Push user message
+      // Push User Message
       messageHistory.push({ sender: 'user', text: text });
       input.value = '';
+      
+      // Placeholder thinking response
+      messageHistory.push({ sender: 'aura', text: "Thinking..." });
       renderMessages();
 
-      // Simulate Aura Response
-      setTimeout(() => {
-        const reply = `I received your command: "${text}". Aura systems are operating smoothly.`;
-        messageHistory.push({ sender: 'aura', text: reply });
+      try {
+        // Query free open-access AI API
+        const response = await fetch(`https://text.pollinations.ai/${encodeURIComponent(text)}?system=You+are+Aura,+a+helpful,+smart,+and+futuristic+AI+assistant.+Keep+answers+concise+and+helpful.`);
+        const replyText = await response.text();
+
+        // Replace 'Thinking...' with live response
+        messageHistory[messageHistory.length - 1].text = replyText || "I couldn't process that right now. Please try asking again!";
         renderMessages();
-        
-        // Auto-speak Aura response with Persona voice
-        speakTextPersona(reply);
-      }, 600);
+        speakTextPersona(messageHistory[messageHistory.length - 1].text);
+
+      } catch (error) {
+        console.error("AI Error:", error);
+        messageHistory[messageHistory.length - 1].text = "Sorry, I had trouble connecting to the AI network. Check your connection!";
+        renderMessages();
+      }
     }
 
     function handleKeyDown(e) {
-      playKeyClickSound();
       if (e.key === 'Enter') sendMessage();
     }
 
@@ -398,7 +492,7 @@
     }
 
     /* =========================================================
-       2. NATURAL PERSONA TEXT-TO-SPEECH (TTS ENGINE)
+       4. PERSONA TEXT-TO-SPEECH (HUMAN VOICE)
        ========================================================= */
     function speakMessageIndex(index) {
       if (messageHistory[index]) {
@@ -407,42 +501,33 @@
     }
 
     function speakTextPersona(text) {
-      // 1. Cancel ongoing speech
       window.speechSynthesis.cancel();
 
-      // 2. Pre-process text so Aura speaks like a real person
       let personaText = text
-        .replace(/```[\s\S]*?```/g, " Here is the code preview. ") // Skip reading raw code blocks
-        .replace(/[`*#_~>]/g, "")                             // Clean markdown symbols
-        .replace(/([.?!])\1+/g, "$1")                         // Remove multi-punctuation pauses
+        .replace(/```[\s\S]*?```/g, " Here is the code snippet. ")
+        .replace(/[`*#_~>]/g, "")
+        .replace(/([.?!])\1+/g, "$1")
         .trim();
 
       const utterance = new SpeechSynthesisUtterance(personaText);
+      utterance.rate = 1.05;
+      utterance.pitch = 1.1;
 
-      // 3. Human Persona Voice Tuning
-      utterance.rate = 1.05;  // Slightly energetic, natural conversational speed
-      utterance.pitch = 1.1;  // Warm, expressive voice pitch
-
-      // 4. Select best natural Android/Browser voice
       const voices = window.speechSynthesis.getVoices();
       const naturalVoice = voices.find(v => 
         v.lang.includes('en') && (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Female'))
       );
 
-      if (naturalVoice) {
-        utterance.voice = naturalVoice;
-      }
-
+      if (naturalVoice) utterance.voice = naturalVoice;
       window.speechSynthesis.speak(utterance);
     }
 
-    // Ensure voices are loaded on mobile browsers
     if (typeof speechSynthesis !== 'undefined') {
       speechSynthesis.onvoiceschanged = () => speechSynthesis.getVoices();
     }
 
     /* =========================================================
-       3. SANDBOX DRAWER TOGGLE
+       5. SANDBOX DRAWER TOGGLE
        ========================================================= */
     function toggleSandbox() {
       const drawer = document.getElementById('sandbox-container');
@@ -450,7 +535,6 @@
       drawer.classList.toggle('open');
       btn.classList.toggle('active');
 
-      // If opening, write default preview page if blank
       if (drawer.classList.contains('open')) {
         const iframe = document.getElementById('sandbox-iframe');
         if (iframe.src === 'about:blank') {
@@ -460,7 +544,7 @@
               <body style="font-family:sans-serif; display:flex; justify-content:center; align-items:center; height:100vh; margin:0; background:#f4f6f8;">
                 <div style="text-align:center;">
                   <h2 style="color:#00f0ff;">Aura Interactive Preview</h2>
-                  <p style="color:#666;">Code rendered live for Nyamekye & Kirk's demo.</p>
+                  <p style="color:#666;">Code rendered live here.</p>
                 </div>
               </body>
             </html>
@@ -471,7 +555,7 @@
     }
 
     /* =========================================================
-       4. SYNTHESIZED MECHANICAL KEYBOARD SOUNDS
+       6. KEYBOARD SOUND FX ENGINE
        ========================================================= */
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
@@ -485,7 +569,7 @@
       osc.frequency.setValueAtTime(600 + Math.random() * 200, audioCtx.currentTime);
       osc.frequency.exponentialRampToValueAtTime(120, audioCtx.currentTime + 0.04);
 
-      gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+      gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.04);
 
       osc.connect(gain);
@@ -496,7 +580,7 @@
     }
 
     /* =========================================================
-       5. HOLOGRAPHIC WAVE HUD CANVAS
+       7. HOLOGRAPHIC WAVE HUD CANVAS
        ========================================================= */
     const hudCanvas = document.getElementById('hudCanvas');
     const hudCtx = hudCanvas.getContext('2d');
@@ -509,7 +593,7 @@
       hudCtx.clearRect(0, 0, hudCanvas.width, hudCanvas.height);
       hudCtx.beginPath();
       hudCtx.lineWidth = 2;
-      hudCtx.strokeStyle = '#00f0ff';
+      hudCtx.strokeStyle = getComputedStyle(document.body).getPropertyValue('--accent').trim() || '#00f0ff';
 
       const cy = hudCanvas.height / 2;
       for (let x = 0; x < hudCanvas.width; x++) {
@@ -524,7 +608,7 @@
     animateHUD();
 
     /* =========================================================
-       6. THREE.JS CYBERNETIC BACKGROUND
+       8. INTERACTIVE 3D STARS (TOUCH & MOUSE MOVEMENT)
        ========================================================= */
     const container = document.getElementById('canvas-container');
     const scene = new THREE.Scene();
@@ -534,7 +618,7 @@
     renderer.setSize(window.innerWidth, window.innerHeight);
     container.appendChild(renderer.domElement);
 
-    const particlesCount = 350;
+    const particlesCount = 400;
     const geometry = new THREE.BufferGeometry();
     const positions = new Float32Array(particlesCount * 3);
 
@@ -543,21 +627,56 @@
     }
 
     geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    const material = new THREE.PointsMaterial({
+    let particleMaterial = new THREE.PointsMaterial({
       color: 0x00f0ff,
-      size: 0.04,
+      size: 0.05,
       transparent: true,
-      opacity: 0.7
+      opacity: 0.8
     });
 
-    const particles = new THREE.Points(geometry, material);
+    const particles = new THREE.Points(geometry, particleMaterial);
     scene.add(particles);
     camera.position.z = 5;
 
+    // Interactive Touch / Mouse Position Variables
+    let mouseX = 0;
+    let mouseY = 0;
+    let targetX = 0;
+    let targetY = 0;
+
+    function onPointerMove(e) {
+      let clientX = e.clientX || (e.touches && e.touches[0].clientX);
+      let clientY = e.clientY || (e.touches && e.touches[0].clientY);
+
+      if (clientX !== undefined && clientY !== undefined) {
+        mouseX = (clientX - window.innerWidth / 2) * 0.002;
+        mouseY = (clientY - window.innerHeight / 2) * 0.002;
+      }
+    }
+
+    window.addEventListener('mousemove', onPointerMove);
+    window.addEventListener('touchmove', onPointerMove);
+
+    function updateStarColor() {
+      const hexColor = getComputedStyle(document.body).getPropertyValue('--accent').trim();
+      if (particleMaterial && hexColor) {
+        particleMaterial.color.set(hexColor);
+      }
+    }
+
     function animateThree() {
       requestAnimationFrame(animateThree);
-      particles.rotation.y += 0.001;
-      particles.rotation.x += 0.0005;
+
+      // Smooth interactive rotation tracking touch/mouse
+      targetX += (mouseX - targetX) * 0.05;
+      targetY += (mouseY - targetY) * 0.05;
+
+      particles.rotation.y = targetX;
+      particles.rotation.x = targetY;
+
+      // Gentle continuous drift
+      particles.rotation.z += 0.0005;
+
       renderer.render(scene, camera);
     }
     animateThree();
@@ -568,37 +687,4 @@
       renderer.setSize(window.innerWidth, window.innerHeight);
     });
 
-    /* =========================================================
-       7. SPEECH RECOGNITION (VOICE INPUT)
-       ========================================================= */
-    function toggleVoiceListen() {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (!SpeechRecognition) {
-        alert("Speech Recognition is not supported on this browser. Try Chrome on Android!");
-        return;
-      }
-
-      const recognition = new SpeechRecognition();
-      const micBtn = document.getElementById('micBtn');
-
-      recognition.onstart = () => {
-        micBtn.innerText = "🎙️ Listening...";
-        micBtn.style.borderColor = "#ff4b4b";
-      };
-
-      recognition.onresult = (e) => {
-        const transcript = e.results[0][0].transcript;
-        document.getElementById('userInput').value = transcript;
-        sendMessage();
-      };
-
-      recognition.onend = () => {
-        micBtn.innerText = "🎙️ Speak";
-        micBtn.style.borderColor = "rgba(255, 255, 255, 0.15)";
-      };
-
-      recognition.start();
-    }
-  </script>
-</body>
-</html>
+    /* =
