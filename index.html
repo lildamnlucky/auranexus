@@ -12,18 +12,18 @@
     :root {
       --bg-color: #0b0e14;
       --card-bg: rgba(22, 27, 34, 0.85);
-      --accent: #00f0ff;
-      --accent-purple: #7000ff;
+      --accent: #00ff66;
+      --accent-secondary: #008833;
       --text: #f0f6fc;
       --text-dim: #8b949e;
       --danger: #ff4b4b;
     }
 
-    /* Color Themes */
-    body.theme-cyan { --accent: #00f0ff; --accent-purple: #7000ff; }
-    body.theme-green { --accent: #00ff66; --accent-purple: #008833; }
-    body.theme-gold { --accent: #ffcc00; --accent-purple: #ff6600; }
-    body.theme-pink { --accent: #ff007f; --accent-purple: #99004d; }
+    /* Restored Custom Color Themes: Green, Orange, Purple, Cyan */
+    body.theme-green { --accent: #00ff66; --accent-secondary: #008833; }
+    body.theme-orange { --accent: #ff6600; --accent-secondary: #ffcc00; }
+    body.theme-purple { --accent: #a855f7; --accent-secondary: #7000ff; }
+    body.theme-cyan { --accent: #00f0ff; --accent-secondary: #0077ff; }
 
     * {
       box-sizing: border-box;
@@ -39,7 +39,6 @@
       overflow: hidden;
       display: flex;
       flex-direction: column;
-      touch-action: none;
     }
 
     /* 3D Canvas Background */
@@ -50,6 +49,7 @@
       width: 100vw;
       height: 100vh;
       z-index: 1;
+      touch-action: none; /* Crucial for touch dragging on mobile */
     }
 
     /* Main Console Layout */
@@ -68,7 +68,7 @@
     .brand h1 {
       font-size: 1.2rem;
       letter-spacing: 1px;
-      background: linear-gradient(90deg, var(--accent), var(--accent-purple));
+      background: linear-gradient(90deg, var(--accent), var(--accent-secondary));
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
@@ -120,7 +120,7 @@
 
     .btn:hover, .btn.active {
       border-color: var(--accent);
-      box-shadow: 0 0 10px rgba(0, 240, 255, 0.3);
+      box-shadow: 0 0 10px var(--accent);
     }
 
     /* Main Work Area */
@@ -130,6 +130,11 @@
       flex: 1;
       display: flex;
       overflow: hidden;
+      pointer-events: none; /* Allows clicks to pass through empty space to canvas */
+    }
+
+    .chat-section, .sandbox-drawer {
+      pointer-events: auto; /* Re-enables interaction inside UI elements */
     }
 
     /* Chat Section */
@@ -168,8 +173,9 @@
 
     .message.user {
       align-self: flex-end;
-      background: linear-gradient(135deg, var(--accent-purple), #4a00b0);
-      color: white;
+      background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+      color: #000;
+      font-weight: 500;
       border-bottom-right-radius: 2px;
     }
 
@@ -202,7 +208,7 @@
       color: var(--accent);
     }
 
-    /* Input & Virtual Keyboard Bar */
+    /* Input & Virtual Keypad */
     .chat-input-wrapper {
       padding: 10px 16px;
       background: rgba(11, 14, 20, 0.9);
@@ -231,10 +237,9 @@
 
     .chat-input:focus {
       border-color: var(--accent);
-      box-shadow: 0 0 8px rgba(0, 240, 255, 0.2);
+      box-shadow: 0 0 8px var(--accent);
     }
 
-    /* Virtual Keyboard Controls */
     .virtual-keyboard {
       display: none;
       gap: 6px;
@@ -315,12 +320,12 @@
     }
   </style>
 </head>
-<body class="theme-cyan">
+<body class="theme-green">
 
   <!-- Interactive 3D Stars Canvas Container -->
   <div id="canvas-container"></div>
 
-  <!-- Header Header -->
+  <!-- Header -->
   <header class="app-header">
     <div class="brand">
       <h1>AURA NEXUS</h1>
@@ -332,12 +337,12 @@
     </div>
 
     <div class="nav-actions">
-      <!-- Theme Switcher Color Selector -->
+      <!-- Restored Theme Options: Green, Orange, Purple, Cyan -->
       <select class="theme-select" onchange="changeTheme(this.value)">
-        <option value="theme-cyan">Cyan</option>
         <option value="theme-green">Green</option>
-        <option value="theme-gold">Gold</option>
-        <option value="theme-pink">Pink</option>
+        <option value="theme-orange">Orange</option>
+        <option value="theme-purple">Purple</option>
+        <option value="theme-cyan">Cyan</option>
       </select>
 
       <button class="btn" onclick="toggleVirtualKeyboard()" id="kbdToggleBtn">⌨️ Keypad</button>
@@ -352,7 +357,7 @@
     <section class="chat-section">
       <div class="chat-messages" id="chatMessages">
         <div class="message aura">
-          Hello! Aura is online with active AI processing. Ask me anything!
+          Hello! Aura is online and ready. How can I help you today?
         </div>
       </div>
 
@@ -362,28 +367,27 @@
             type="text" 
             id="userInput" 
             class="chat-input" 
-            placeholder="Ask Aura a question..." 
+            placeholder="Ask Aura anything..." 
             onkeydown="handleKeyDown(event)"
           />
           <button class="btn" id="sendBtn" onclick="sendMessage()">Send</button>
         </div>
 
-        <!-- On-screen Quick Keyboard -->
+        <!-- Virtual Keypad -->
         <div class="virtual-keyboard" id="virtualKeyboard">
           <button class="key-btn" onclick="typeQuickKey('What can you do?')">What can you do?</button>
           <button class="key-btn" onclick="typeQuickKey('Tell me a cool space fact!')">Space Fact</button>
-          <button class="key-btn" onclick="typeQuickKey('Write a short HTML button')">HTML Code</button>
+          <button class="key-btn" onclick="typeQuickKey('Build a button demo')">Build Button</button>
           <button class="key-btn" onclick="typeQuickKey('Clear')">Clear</button>
         </div>
       </div>
     </section>
 
-    <!-- Interactive Sandbox Drawer -->
+    <!-- Sandbox Drawer -->
     <aside id="sandbox-container" class="sandbox-drawer">
       <button id="close-sandbox-btn" onclick="toggleSandbox()" class="sandbox-close-fab">
         ✕ Close Preview
       </button>
-
       <iframe id="sandbox-iframe" src="about:blank"></iframe>
     </aside>
   </main>
@@ -399,7 +403,7 @@
     }
 
     /* =========================================================
-       2. VIRTUAL KEYBOARD TOGGLE
+       2. VIRTUAL KEYPAD TOGGLE
        ========================================================= */
     function toggleVirtualKeyboard() {
       const kbd = document.getElementById('virtualKeyboard');
@@ -418,10 +422,10 @@
     }
 
     /* =========================================================
-       3. LIVE AI CHAT ENGINE INTEGRATION
+       3. AI CHAT ENGINE
        ========================================================= */
     let messageHistory = [
-      { sender: 'aura', text: "Hello! Aura is online with active AI processing. Ask me anything!" }
+      { sender: 'aura', text: "Hello! Aura is online and ready. How can I help you today?" }
     ];
 
     function renderMessages() {
@@ -458,27 +462,22 @@
 
       playKeyClickSound();
 
-      // Push User Message
       messageHistory.push({ sender: 'user', text: text });
       input.value = '';
       
-      // Placeholder thinking response
       messageHistory.push({ sender: 'aura', text: "Thinking..." });
       renderMessages();
 
       try {
-        // Query free open-access AI API
-        const response = await fetch(`https://text.pollinations.ai/${encodeURIComponent(text)}?system=You+are+Aura,+a+helpful,+smart,+and+futuristic+AI+assistant.+Keep+answers+concise+and+helpful.`);
+        const response = await fetch(`https://text.pollinations.ai/${encodeURIComponent(text)}?system=You+are+Aura,+a+helpful,+smart,+and+futuristic+AI+assistant.`);
         const replyText = await response.text();
 
-        // Replace 'Thinking...' with live response
-        messageHistory[messageHistory.length - 1].text = replyText || "I couldn't process that right now. Please try asking again!";
+        messageHistory[messageHistory.length - 1].text = replyText || "I couldn't process that right now. Try again!";
         renderMessages();
         speakTextPersona(messageHistory[messageHistory.length - 1].text);
 
       } catch (error) {
-        console.error("AI Error:", error);
-        messageHistory[messageHistory.length - 1].text = "Sorry, I had trouble connecting to the AI network. Check your connection!";
+        messageHistory[messageHistory.length - 1].text = "Sorry, I had trouble connecting to the AI network.";
         renderMessages();
       }
     }
@@ -492,7 +491,7 @@
     }
 
     /* =========================================================
-       4. PERSONA TEXT-TO-SPEECH (HUMAN VOICE)
+       4. SPEECH SYNTHESIS
        ========================================================= */
     function speakMessageIndex(index) {
       if (messageHistory[index]) {
@@ -543,7 +542,7 @@
             <html>
               <body style="font-family:sans-serif; display:flex; justify-content:center; align-items:center; height:100vh; margin:0; background:#f4f6f8;">
                 <div style="text-align:center;">
-                  <h2 style="color:#00f0ff;">Aura Interactive Preview</h2>
+                  <h2 style="color:#00ff66;">Aura Interactive Preview</h2>
                   <p style="color:#666;">Code rendered live here.</p>
                 </div>
               </body>
@@ -593,7 +592,7 @@
       hudCtx.clearRect(0, 0, hudCanvas.width, hudCanvas.height);
       hudCtx.beginPath();
       hudCtx.lineWidth = 2;
-      hudCtx.strokeStyle = getComputedStyle(document.body).getPropertyValue('--accent').trim() || '#00f0ff';
+      hudCtx.strokeStyle = getComputedStyle(document.body).getPropertyValue('--accent').trim() || '#00ff66';
 
       const cy = hudCanvas.height / 2;
       for (let x = 0; x < hudCanvas.width; x++) {
@@ -608,7 +607,7 @@
     animateHUD();
 
     /* =========================================================
-       8. INTERACTIVE 3D STARS (TOUCH & MOUSE MOVEMENT)
+       8. FULLY RESTORED 3D STARS (TOUCH & MOUSE DRAGGING)
        ========================================================= */
     const container = document.getElementById('canvas-container');
     const scene = new THREE.Scene();
@@ -618,7 +617,7 @@
     renderer.setSize(window.innerWidth, window.innerHeight);
     container.appendChild(renderer.domElement);
 
-    const particlesCount = 400;
+    const particlesCount = 500;
     const geometry = new THREE.BufferGeometry();
     const positions = new Float32Array(particlesCount * 3);
 
@@ -627,8 +626,9 @@
     }
 
     geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    
     let particleMaterial = new THREE.PointsMaterial({
-      color: 0x00f0ff,
+      color: 0x00ff66,
       size: 0.05,
       transparent: true,
       opacity: 0.8
@@ -638,53 +638,54 @@
     scene.add(particles);
     camera.position.z = 5;
 
-    // Interactive Touch / Mouse Position Variables
-    let mouseX = 0;
-    let mouseY = 0;
-    let targetX = 0;
-    let targetY = 0;
+    // Interactive Touch & Mouse Tracking
+    let targetRotationX = 0;
+    let targetRotationY = 0;
+    let pointerX = 0;
+    let pointerY = 0;
+    let isDragging = false;
 
-    function onPointerMove(e) {
-      let clientX = e.clientX || (e.touches && e.touches[0].clientX);
-      let clientY = e.clientY || (e.touches && e.touches[0].clientY);
-
-      if (clientX !== undefined && clientY !== undefined) {
-        mouseX = (clientX - window.innerWidth / 2) * 0.002;
-        mouseY = (clientY - window.innerHeight / 2) * 0.002;
-      }
-    }
-
-    window.addEventListener('mousemove', onPointerMove);
-    window.addEventListener('touchmove', onPointerMove);
-
-    function updateStarColor() {
-      const hexColor = getComputedStyle(document.body).getPropertyValue('--accent').trim();
-      if (particleMaterial && hexColor) {
-        particleMaterial.color.set(hexColor);
-      }
-    }
-
-    function animateThree() {
-      requestAnimationFrame(animateThree);
-
-      // Smooth interactive rotation tracking touch/mouse
-      targetX += (mouseX - targetX) * 0.05;
-      targetY += (mouseY - targetY) * 0.05;
-
-      particles.rotation.y = targetX;
-      particles.rotation.x = targetY;
-
-      // Gentle continuous drift
-      particles.rotation.z += 0.0005;
-
-      renderer.render(scene, camera);
-    }
-    animateThree();
-
-    window.addEventListener('resize', () => {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
+    // Mouse Controls
+    window.addEventListener('mousedown', (e) => {
+      isDragging = true;
+      pointerX = e.clientX;
+      pointerY = e.clientY;
     });
 
-    /* =
+    window.addEventListener('mousemove', (e) => {
+      if (isDragging) {
+        const deltaX = e.clientX - pointerX;
+        const deltaY = e.clientY - pointerY;
+        targetRotationY += deltaX * 0.005;
+        targetRotationX += deltaY * 0.005;
+        pointerX = e.clientX;
+        pointerY = e.clientY;
+      }
+    });
+
+    window.addEventListener('mouseup', () => { isDragging = false; });
+
+    // Touch Controls for Android / Mobile
+    window.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 1) {
+        isDragging = true;
+        pointerX = e.touches[0].clientX;
+        pointerY = e.touches[0].clientY;
+      }
+    });
+
+    window.addEventListener('touchmove', (e) => {
+      if (isDragging && e.touches.length === 1) {
+        const deltaX = e.touches[0].clientX - pointerX;
+        const deltaY = e.touches[0].clientY - pointerY;
+        targetRotationY += deltaX * 0.005;
+        targetRotationX += deltaY * 0.005;
+        pointerX = e.touches[0].clientX;
+        pointerY = e.touches[0].clientY;
+      }
+    });
+
+    window.addEventListener('touchend', () => { isDragging = false; });
+
+    function updateStarColor() {
+      const hexColor = getComputedStyle(document.b
