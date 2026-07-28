@@ -5,25 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Aether Nexus Console</title>
   
-  <!-- Three.js for 3D Cybernetic Starfield -->
+  <!-- Three.js Background -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
   <style>
     :root {
-      --bg-color: #0b0e14;
-      --card-bg: rgba(22, 27, 34, 0.85);
+      --bg-color: #131314;
+      --card-bg: #1e1f20;
       --accent: #00ff66;
-      --accent-secondary: #008833;
-      --text: #f0f6fc;
-      --text-dim: #8b949e;
-      --danger: #ff4b4b;
+      --accent-hover: #00cc52;
+      --text: #e3e3e3;
+      --text-dim: #c4c7c5;
+      --surface-variant: #282a2c;
+      --danger: #f2b8b5;
     }
-
-    /* Custom Themes: Green, Orange, Purple, Cyan */
-    body.theme-green { --accent: #00ff66; --accent-secondary: #008833; }
-    body.theme-orange { --accent: #ff6600; --accent-secondary: #ffcc00; }
-    body.theme-purple { --accent: #a855f7; --accent-secondary: #7000ff; }
-    body.theme-cyan { --accent: #00f0ff; --accent-secondary: #0077ff; }
 
     * {
       box-sizing: border-box;
@@ -41,7 +36,7 @@
       flex-direction: column;
     }
 
-    /* 3D Canvas Background */
+    /* 3D Background */
     #canvas-container {
       position: fixed;
       top: 0;
@@ -52,7 +47,7 @@
       touch-action: none;
     }
 
-    /* App Header Layout */
+    /* Top Navigation Bar */
     .app-header {
       position: relative;
       z-index: 10;
@@ -60,440 +55,590 @@
       justify-content: space-between;
       align-items: center;
       padding: 12px 16px;
-      background: rgba(11, 14, 20, 0.85);
+      background: rgba(19, 19, 20, 0.85);
       backdrop-filter: blur(10px);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     }
 
-    .brand h1 {
-      font-size: 1.1rem;
-      letter-spacing: 1px;
-      background: linear-gradient(90deg, var(--accent), var(--accent-secondary));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    .nav-actions {
+    .header-left, .header-right {
       display: flex;
-      gap: 6px;
       align-items: center;
+      gap: 12px;
     }
 
-    .theme-select {
-      background: var(--card-bg);
+    .icon-btn {
+      background: none;
+      border: none;
       color: var(--text);
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      padding: 6px 8px;
-      border-radius: 8px;
-      outline: none;
-      font-size: 0.8rem;
-    }
-
-    .btn {
-      background: var(--card-bg);
-      color: var(--text);
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      padding: 6px 10px;
-      border-radius: 8px;
+      font-size: 1.2rem;
       cursor: pointer;
-      font-size: 0.8rem;
+      padding: 8px;
+      border-radius: 50%;
       display: flex;
       align-items: center;
-      gap: 4px;
+      justify-content: center;
+      transition: background 0.2s;
     }
 
-    .btn:hover, .btn.active {
-      border-color: var(--accent);
-      box-shadow: 0 0 8px var(--accent);
+    .icon-btn:hover {
+      background: var(--surface-variant);
     }
 
-    /* Main Container Split */
+    /* Model Selector Trigger */
+    .model-selector-btn {
+      background: none;
+      border: none;
+      color: var(--text);
+      font-size: 1.1rem;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      padding: 6px 12px;
+      border-radius: 20px;
+    }
+
+    .model-selector-btn:hover {
+      background: var(--surface-variant);
+    }
+
+    /* Dropdown Menus */
+    .dropdown-menu {
+      display: none;
+      position: absolute;
+      top: 52px;
+      left: 50px;
+      background: #28292a;
+      border-radius: 16px;
+      padding: 12px;
+      width: 240px;
+      z-index: 100;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .dropdown-menu.active {
+      display: flex;
+    }
+
+    .model-option {
+      display: flex;
+      flex-direction: column;
+      padding: 8px 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .model-option:hover, .model-option.selected {
+      background: #37393b;
+    }
+
+    .model-option .title {
+      font-size: 0.95rem;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .model-option .badge {
+      font-size: 0.7rem;
+      background: #3c4043;
+      padding: 2px 6px;
+      border-radius: 10px;
+      color: var(--accent);
+    }
+
+    .model-option .desc {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      margin-top: 2px;
+    }
+
+    /* Three Dots Options Menu */
+    .options-dropdown {
+      display: none;
+      position: absolute;
+      top: 52px;
+      right: 16px;
+      background: #28292a;
+      border-radius: 12px;
+      padding: 8px 0;
+      width: 180px;
+      z-index: 100;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+      flex-direction: column;
+    }
+
+    .options-dropdown.active {
+      display: flex;
+    }
+
+    .option-item {
+      padding: 10px 16px;
+      font-size: 0.9rem;
+      color: var(--text);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .option-item:hover {
+      background: #37393b;
+    }
+
+    /* Main Container Layout */
     .main-container {
       position: relative;
       z-index: 10;
       flex: 1;
       display: flex;
-      overflow: hidden;
+      flex-direction: column;
+      justify-content: space-between;
+      max-width: 850px;
+      width: 100%;
+      margin: 0 auto;
+      height: calc(100vh - 60px);
+      padding: 10px 16px 20px 16px;
       pointer-events: none;
     }
 
-    .chat-section, .sandbox-drawer, .modal {
+    .chat-messages, .chat-input-card, .sidebar-drawer {
       pointer-events: auto;
-    }
-
-    /* Chat Area */
-    .chat-section {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      height: 100%;
     }
 
     .chat-messages {
       flex: 1;
       overflow-y: auto;
-      padding: 16px;
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 16px;
+      padding-bottom: 20px;
     }
 
     .message {
       max-width: 85%;
-      padding: 10px 14px;
-      border-radius: 12px;
-      line-height: 1.4;
-      font-size: 0.9rem;
-      animation: fadeIn 0.2s ease;
+      padding: 12px 16px;
+      border-radius: 18px;
+      font-size: 0.95rem;
+      line-height: 1.5;
       white-space: pre-wrap;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(4px); }
-      to { opacity: 1; transform: translateY(0); }
     }
 
     .message.user {
       align-self: flex-end;
-      background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
-      color: #000;
-      font-weight: 500;
-      border-bottom-right-radius: 2px;
+      background: #282a2c;
+      color: var(--text);
+      border-bottom-right-radius: 4px;
     }
 
     .message.aura {
       align-self: flex-start;
+      background: transparent;
+      color: var(--text);
+      padding-left: 0;
+    }
+
+    /* Card Input Bar */
+    .chat-input-card {
       background: var(--card-bg);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      backdrop-filter: blur(8px);
-      border-bottom-left-radius: 2px;
-    }
-
-    .message img.attached-img {
-      max-width: 200px;
-      border-radius: 8px;
-      margin-top: 8px;
-      display: block;
-    }
-
-    /* Input & Media Actions Bar */
-    .chat-input-wrapper {
-      padding: 10px;
-      background: rgba(11, 14, 20, 0.95);
-      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 28px;
+      padding: 12px 16px;
       display: flex;
       flex-direction: column;
       gap: 8px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.3);
     }
 
-    .chat-input-container {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-    }
-
-    .plus-btn {
-      background: var(--card-bg);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      color: var(--accent);
-      font-size: 1.2rem;
-      width: 40px;
-      height: 40px;
-      border-radius: 10px;
+    .input-row {
       display: flex;
       align-items: center;
-      justify-content: center;
-      cursor: pointer;
+      gap: 10px;
     }
 
     .chat-input {
       flex: 1;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      padding: 10px 14px;
-      border-radius: 10px;
-      color: white;
+      background: transparent;
+      border: none;
+      color: var(--text);
       outline: none;
-      font-size: 0.9rem;
+      font-size: 1rem;
+      padding: 8px 4px;
     }
 
-    /* File Preview Chip */
-    .image-preview-bar {
-      display: none;
+    .action-btn-circle {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #000;
+      border: none;
+      display: flex;
       align-items: center;
-      gap: 8px;
-      background: rgba(255, 255, 255, 0.08);
-      padding: 6px 12px;
-      border-radius: 8px;
-      font-size: 0.8rem;
-    }
-
-    .image-preview-bar img {
-      width: 30px;
-      height: 30px;
-      object-fit: cover;
-      border-radius: 4px;
-    }
-
-    /* Sandbox Drawer */
-    .sandbox-drawer {
-      width: 0%;
-      height: 100%;
-      background: #11141c;
-      border-left: 1px solid rgba(255, 255, 255, 0.1);
-      position: relative;
-      transition: width 0.3s ease;
-      overflow: hidden;
-    }
-
-    .sandbox-drawer.open {
-      width: 50%;
-    }
-
-    @media (max-width: 768px) {
-      .sandbox-drawer.open {
-        position: absolute;
-        top: 0;
-        right: 0;
-        width: 100%;
-        z-index: 100;
-      }
-    }
-
-    .sandbox-close-fab {
-      position: absolute;
-      top: 12px;
-      right: 12px;
-      z-index: 9999;
-      background: var(--danger);
-      color: white;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 20px;
-      font-weight: bold;
-      font-size: 0.8rem;
+      justify-content: center;
       cursor: pointer;
+      font-size: 1.1rem;
+      font-weight: bold;
+      transition: background 0.2s;
     }
 
-    iframe#sandbox-iframe {
-      width: 100%;
-      height: 100%;
+    .action-btn-circle:hover {
+      background: var(--accent-hover);
+    }
+
+    .action-btn-circle.stop-btn {
+      background: var(--danger);
+      color: #000;
+    }
+
+    .plus-icon-btn {
+      font-size: 1.4rem;
+      color: var(--text-dim);
+      background: none;
       border: none;
-      background: #ffffff;
+      cursor: pointer;
+      padding: 4px 8px;
     }
 
-    /* Modal for API Key Settings */
-    .modal {
+    /* Left Drawer Navigation */
+    .sidebar-drawer {
+      position: fixed;
+      top: 0;
+      left: -300px;
+      width: 280px;
+      height: 100vh;
+      background: #1e1f20;
+      z-index: 200;
+      transition: left 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      padding: 16px;
+      box-shadow: 4px 0 20px rgba(0,0,0,0.5);
+    }
+
+    .sidebar-drawer.open {
+      left: 0;
+    }
+
+    .sidebar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+
+    .sidebar-menu-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .sidebar-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 12px 14px;
+      border-radius: 20px;
+      color: var(--text);
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .sidebar-item:hover {
+      background: #282a2c;
+    }
+
+    .sidebar-section-title {
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      margin: 20px 14px 8px 14px;
+    }
+
+    .recent-chats-list {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .drawer-overlay {
       display: none;
       position: fixed;
       top: 0;
       left: 0;
       width: 100vw;
       height: 100vh;
-      background: rgba(0,0,0,0.7);
-      z-index: 999;
-      justify-content: center;
-      align-items: center;
+      background: rgba(0,0,0,0.5);
+      z-index: 150;
     }
 
-    .modal-content {
-      background: #161b22;
-      border: 1px solid rgba(255,255,255,0.2);
-      padding: 20px;
-      border-radius: 12px;
-      width: 90%;
-      max-width: 400px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
+    .drawer-overlay.active {
+      display: block;
     }
   </style>
 </head>
-<body class="theme-green">
+<body>
 
-  <!-- Interactive 3D Stars Canvas -->
+  <!-- Background Canvas -->
   <div id="canvas-container"></div>
 
-  <!-- App Header -->
+  <!-- Header -->
   <header class="app-header">
-    <div class="brand">
-      <h1>AETHER NEXUS</h1>
+    <div class="header-left">
+      <button class="icon-btn" onclick="toggleSidebar()">☰</button>
+      
+      <!-- Aether Model Selector Trigger -->
+      <button class="model-selector-btn" onclick="toggleModelDropdown()">
+        <span id="currentModelName">Aether Flash</span> ⌵
+      </button>
+
+      <!-- Aether Models Dropdown Menu -->
+      <div class="dropdown-menu" id="modelDropdown">
+        <div class="model-option" onclick="selectModel('Aether Lite')">
+          <div class="title">Aether Lite <span class="badge">New</span></div>
+          <div class="desc">Fastest answers</div>
+        </div>
+        <div class="model-option selected" onclick="selectModel('Aether Flash')">
+          <div class="title">Aether Flash <span class="badge">New</span></div>
+          <div class="desc">All-around help</div>
+        </div>
+        <div class="model-option" onclick="selectModel('Aether Pro')">
+          <div class="title">Aether Pro</div>
+          <div class="desc">Advanced math & code</div>
+        </div>
+        <div class="model-option" onclick="selectModel('Extended thinking')">
+          <div class="title">Extended thinking</div>
+          <div class="desc">Complex problem solving</div>
+        </div>
+      </div>
     </div>
 
-    <div class="nav-actions">
-      <select class="theme-select" onchange="changeTheme(this.value)">
-        <option value="theme-green">Green</option>
-        <option value="theme-orange">Orange</option>
-        <option value="theme-purple">Purple</option>
-        <option value="theme-cyan">Cyan</option>
-      </select>
+    <div class="header-right">
+      <button class="icon-btn" onclick="startNewChat()" title="New Chat">✏️</button>
+      <button class="icon-btn" onclick="toggleOptionsDropdown()" title="Menu">⋮</button>
 
-      <button class="btn" onclick="openKeyModal()">⚙️ Key</button>
-      <button class="btn" onclick="toggleVoiceListen()" id="micBtn">🎙️ Speak</button>
-      <button class="btn" onclick="toggleSandbox()" id="sandboxToggleBtn">⚡ Sandbox</button>
+      <!-- Three-Dot Options Dropdown -->
+      <div class="options-dropdown" id="optionsDropdown">
+        <div class="option-item" onclick="handleOption('Shared conversations')">🔗 Shared conversations</div>
+        <div class="option-item" onclick="handleOption('Pin')">📌 Pin chat</div>
+        <div class="option-item" onclick="handleOption('Rename')">✏️ Rename</div>
+        <div class="option-item" onclick="handleOption('Delete')">🗑️ Delete</div>
+      </div>
     </div>
   </header>
 
-  <!-- Main Split Layout -->
+  <!-- Sidebar Overlay -->
+  <div class="drawer-overlay" id="drawerOverlay" onclick="toggleSidebar()"></div>
+
+  <!-- Left Sidebar Drawer -->
+  <aside class="sidebar-drawer" id="sidebarDrawer">
+    <div class="sidebar-header">
+      <h2 style="font-size: 1.2rem; font-weight: 500; color: var(--accent);">Aether Nexus</h2>
+      <button class="icon-btn" onclick="toggleSidebar()">✕</button>
+    </div>
+
+    <div class="sidebar-menu-list">
+      <div class="sidebar-item" onclick="startNewChat()">✏️ New chat</div>
+      <div class="sidebar-item" onclick="handleOption('Search chats')">🔍 Search chats</div>
+      <div class="sidebar-item" onclick="handleOption('Images')">🖼️ Images</div>
+      <div class="sidebar-item" onclick="handleOption('Library')">📱 Library</div>
+    </div>
+
+    <div class="sidebar-section-title">Notebooks</div>
+    <div class="sidebar-item" onclick="handleOption('New notebook')">➕ New notebook</div>
+
+    <div class="sidebar-section-title">Recent Chats</div>
+    <div class="recent-chats-list" id="recentChatsList">
+      <!-- Dynamic Recent Chats Inserted Here -->
+    </div>
+  </aside>
+
+  <!-- Main Chat Container -->
   <main class="main-container">
-    <section class="chat-section">
-      <div class="chat-messages" id="chatMessages">
-        <div class="message aura">
-          Welcome to Aether Nexus! Set your API Key in Settings ⚙️ to connect live AI features, or use the + button to upload image files.
-        </div>
-      </div>
-
-      <div class="chat-input-wrapper">
-        <!-- Image Preview Area -->
-        <div class="image-preview-bar" id="imgPreviewBar">
-          <img id="imgPreviewThumb" src="" alt="preview" />
-          <span id="imgPreviewName">image.png</span>
-          <button style="background:none; border:none; color:var(--danger); cursor:pointer;" onclick="removeImage()">✕</button>
-        </div>
-
-        <div class="chat-input-container">
-          <!-- The PLUS Button for Uploading Images -->
-          <label for="imageUploadInput" class="plus-btn" title="Add Image">+</label>
-          <input type="file" id="imageUploadInput" accept="image/*" style="display:none;" onchange="handleImageSelect(event)" />
-
-          <input 
-            type="text" 
-            id="userInput" 
-            class="chat-input" 
-            placeholder="Type your prompt..." 
-            onkeydown="handleKeyDown(event)"
-          />
-          <button class="btn" onclick="sendMessage()">Send</button>
-        </div>
-      </div>
-    </section>
-
-    <!-- Sandbox Drawer -->
-    <aside id="sandbox-container" class="sandbox-drawer">
-      <button onclick="toggleSandbox()" class="sandbox-close-fab">✕ Close Preview</button>
-      <iframe id="sandbox-iframe" src="about:blank"></iframe>
-    </aside>
-  </main>
-
-  <!-- API Key Modal -->
-  <div class="modal" id="keyModal">
-    <div class="modal-content">
-      <h3>API Settings</h3>
-      <p style="font-size: 0.8rem; color: var(--text-dim);">Paste your Gemini or Open API Key below:</p>
-      <input type="password" id="apiKeyInput" class="chat-input" placeholder="Paste API Key here..." />
-      <div style="display:flex; justify-content:flex-end; gap:8px;">
-        <button class="btn" onclick="closeKeyModal()">Cancel</button>
-        <button class="btn" onclick="saveApiKey()">Save Key</button>
+    <div class="chat-messages" id="chatMessages">
+      <div class="message aura">
+        Aether Nexus online. How can I help you today?
       </div>
     </div>
-  </div>
+
+    <!-- Input Card -->
+    <div class="chat-input-card">
+      <div class="input-row">
+        <button class="plus-icon-btn" title="Upload Image">+</button>
+        <input 
+          type="text" 
+          id="userInput" 
+          class="chat-input" 
+          placeholder="Ask Aether..." 
+          onkeydown="handleKeyDown(event)"
+        />
+        <button class="icon-btn" title="Microphone">🎙️</button>
+        
+        <!-- Combined Send / Stop Button -->
+        <button class="action-btn-circle" id="actionBtn" onclick="handleActionButton()">
+          ↑
+        </button>
+      </div>
+    </div>
+  </main>
 
   <script>
-    /* 1. Theme Selector */
-    function changeTheme(themeName) {
-      document.body.className = themeName;
-      updateStarColor();
+    /* Global Application State */
+    let isThinking = false;
+    let thinkingTimeout = null;
+    let currentChatTitle = "New Conversation";
+    let chatHistoryList = [];
+
+    /* 1. Dropdown Controls */
+    function toggleModelDropdown() {
+      document.getElementById('modelDropdown').classList.toggle('active');
+      document.getElementById('optionsDropdown').classList.remove('active');
     }
 
-    /* 2. Image Selection (+) Handling */
-    let selectedImageData = null;
+    function toggleOptionsDropdown() {
+      document.getElementById('optionsDropdown').classList.toggle('active');
+      document.getElementById('modelDropdown').classList.remove('active');
+    }
 
-    function handleImageSelect(event) {
-      const file = event.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          selectedImageData = e.target.result;
-          document.getElementById('imgPreviewThumb').src = selectedImageData;
-          document.getElementById('imgPreviewName').innerText = file.name;
-          document.getElementById('imgPreviewBar').style.display = 'flex';
-        };
-        reader.readAsDataURL(file);
+    function selectModel(name) {
+      document.getElementById('currentModelName').innerText = name;
+      document.getElementById('modelDropdown').classList.remove('active');
+    }
+
+    function handleOption(action) {
+      document.getElementById('optionsDropdown').classList.remove('active');
+      toggleSidebar(false);
+
+      if (action === 'Rename') {
+        const newName = prompt("Enter new chat title:", currentChatTitle);
+        if (newName) currentChatTitle = newName;
+      } else if (action === 'Delete') {
+        if (confirm("Delete this conversation?")) {
+          document.getElementById('chatMessages').innerHTML = '';
+        }
+      } else {
+        alert(action + " selected.");
       }
     }
 
-    function removeImage() {
-      selectedImageData = null;
-      document.getElementById('imageUploadInput').value = '';
-      document.getElementById('imgPreviewBar').style.display = 'none';
+    /* 2. Sidebar Drawer Controls */
+    function toggleSidebar(forceState) {
+      const drawer = document.getElementById('sidebarDrawer');
+      const overlay = document.getElementById('drawerOverlay');
+      
+      if (typeof forceState === 'boolean') {
+        if (forceState) {
+          drawer.classList.add('open');
+          overlay.classList.add('active');
+        } else {
+          drawer.classList.remove('open');
+          overlay.classList.remove('active');
+        }
+      } else {
+        drawer.classList.toggle('open');
+        overlay.classList.toggle('active');
+      }
     }
 
-    /* 3. API Key Modal Functions */
-    function openKeyModal() {
-      document.getElementById('keyModal').style.display = 'flex';
-      document.getElementById('apiKeyInput').value = localStorage.getItem('aether_api_key') || '';
+    function startNewChat() {
+      toggleSidebar(false);
+      document.getElementById('chatMessages').innerHTML = `
+        <div class="message aura">Aether Nexus online. How can I help you today?</div>
+      `;
     }
 
-    function closeKeyModal() {
-      document.getElementById('keyModal').style.display = 'none';
+    /* 3. Send / Stop Thinking Engine */
+    function handleActionButton() {
+      if (isThinking) {
+        stopThinking();
+      } else {
+        sendMessage();
+      }
     }
-
-    function saveApiKey() {
-      const key = document.getElementById('apiKeyInput').value.trim();
-      localStorage.setItem('aether_api_key', key);
-      closeKeyModal();
-      alert('API Key saved successfully!');
-    }
-
-    /* 4. Chat Engine */
-    let messageHistory = [];
 
     function sendMessage() {
       const input = document.getElementById('userInput');
       const text = input.value.trim();
-      if (!text && !selectedImageData) return;
+      if (!text) return;
 
       const chatBox = document.getElementById('chatMessages');
 
-      // Add user message
+      // Add User Message
       const userDiv = document.createElement('div');
       userDiv.className = 'message user';
       userDiv.innerText = text;
+      chatBox.appendChild(userDiv);
 
-      if (selectedImageData) {
-        const img = document.createElement('img');
-        img.src = selectedImageData;
-        img.className = 'attached-img';
-        userDiv.appendChild(img);
+      input.value = '';
+      chatBox.scrollTop = chatBox.scrollHeight;
+
+      // Track in Recent Chats
+      if (chatHistoryList.indexOf(text) === -1) {
+        chatHistoryList.unshift(text);
+        renderRecentChats();
       }
 
-      chatBox.appendChild(userDiv);
-      input.value = '';
-      
+      // Switch Action Button to "Stop"
+      startThinkingState();
+
+      // Placeholder for AI Response
       const auraDiv = document.createElement('div');
       auraDiv.className = 'message aura';
-      auraDiv.innerText = "Aether AI processing your input...";
+      auraDiv.id = 'currentThinkingMessage';
+      auraDiv.innerText = "Aether is thinking...";
       chatBox.appendChild(auraDiv);
 
-      chatBox.scrollTop = chatBox.scrollHeight;
-      removeImage();
+      // Simulate response generation
+      thinkingTimeout = setTimeout(() => {
+        auraDiv.innerText = "Here is the response generated by Aether Nexus!";
+        stopThinkingState();
+      }, 3500);
+    }
+
+    function startThinkingState() {
+      isThinking = true;
+      const btn = document.getElementById('actionBtn');
+      btn.innerText = "■";
+      btn.classList.add('stop-btn');
+    }
+
+    function stopThinking() {
+      if (thinkingTimeout) clearTimeout(thinkingTimeout);
+      const msg = document.getElementById('currentThinkingMessage');
+      if (msg && msg.innerText === "Aether is thinking...") {
+        msg.innerText = "[Generation stopped by user]";
+      }
+      stopThinkingState();
+    }
+
+    function stopThinkingState() {
+      isThinking = false;
+      const btn = document.getElementById('actionBtn');
+      btn.innerText = "↑";
+      btn.classList.remove('stop-btn');
     }
 
     function handleKeyDown(e) {
       if (e.key === 'Enter') sendMessage();
     }
 
-    /* 5. Sandbox Drawer */
-    function toggleSandbox() {
-      const drawer = document.getElementById('sandbox-container');
-      drawer.classList.toggle('open');
+    function renderRecentChats() {
+      const container = document.getElementById('recentChatsList');
+      container.innerHTML = '';
+      chatHistoryList.slice(0, 10).forEach(title => {
+        const item = document.createElement('div');
+        item.className = 'sidebar-item';
+        item.innerText = '💬 ' + (title.length > 20 ? title.substring(0, 20) + '...' : title);
+        container.appendChild(item);
+      });
     }
 
-    /* 6. Speech Recognition */
-    function toggleVoiceListen() {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (!SpeechRecognition) {
-        alert("Speech Recognition not supported in this browser.");
-        return;
-      }
-      const recognition = new SpeechRecognition();
-      recognition.onresult = (e) => {
-        document.getElementById('userInput').value = e.results[0][0].transcript;
-      };
-      recognition.start();
-    }
-
-    /* 7. 3D Stars Touch & Drag Engine */
+    /* 4. 3D Background Engine */
     const container = document.getElementById('canvas-container');
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -502,7 +647,7 @@
     renderer.setSize(window.innerWidth, window.innerHeight);
     container.appendChild(renderer.domElement);
 
-    const particlesCount = 500;
+    const particlesCount = 400;
     const geometry = new THREE.BufferGeometry();
     const positions = new Float32Array(particlesCount * 3);
 
@@ -513,49 +658,18 @@
     geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
     let particleMaterial = new THREE.PointsMaterial({
       color: 0x00ff66,
-      size: 0.05,
+      size: 0.04,
       transparent: true,
-      opacity: 0.8
+      opacity: 0.5
     });
 
     const particles = new THREE.Points(geometry, particleMaterial);
     scene.add(particles);
     camera.position.z = 5;
 
-    let targetRotationX = 0, targetRotationY = 0, pointerX = 0, pointerY = 0, isDragging = false;
-
-    window.addEventListener('mousedown', (e) => { isDragging = true; pointerX = e.clientX; pointerY = e.clientY; });
-    window.addEventListener('mousemove', (e) => {
-      if (isDragging) {
-        targetRotationY += (e.clientX - pointerX) * 0.005;
-        targetRotationX += (e.clientY - pointerY) * 0.005;
-        pointerX = e.clientX; pointerY = e.clientY;
-      }
-    });
-    window.addEventListener('mouseup', () => { isDragging = false; });
-
-    window.addEventListener('touchstart', (e) => {
-      if (e.touches.length === 1) { isDragging = true; pointerX = e.touches[0].clientX; pointerY = e.touches[0].clientY; }
-    });
-    window.addEventListener('touchmove', (e) => {
-      if (isDragging && e.touches.length === 1) {
-        targetRotationY += (e.touches[0].clientX - pointerX) * 0.005;
-        targetRotationX += (e.touches[0].clientY - pointerY) * 0.005;
-        pointerX = e.touches[0].clientX; pointerY = e.touches[0].clientY;
-      }
-    });
-    window.addEventListener('touchend', () => { isDragging = false; });
-
-    function updateStarColor() {
-      const hexColor = getComputedStyle(document.body).getPropertyValue('--accent').trim();
-      if (particleMaterial && hexColor) particleMaterial.color.set(hexColor);
-    }
-
     function animateThree() {
       requestAnimationFrame(animateThree);
-      particles.rotation.y += (targetRotationY - particles.rotation.y) * 0.1;
-      particles.rotation.x += (targetRotationX - particles.rotation.x) * 0.1;
-      particles.rotation.z += 0.0008;
+      particles.rotation.y += 0.0005;
       renderer.render(scene, camera);
     }
     animateThree();
